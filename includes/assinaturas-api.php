@@ -88,16 +88,18 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 
 	}
 
+	/**
+	 * Retorna parte da URL de acordo com o ambiente
+	 *
+	 * @param boolean $mkt
+	 * @return string
+	 */
 	protected function get_env( $mkt = false )
 	{
 		if ( $mkt )
-		{
 			return ( $this->gateway->homol == "yes" ) ? "dev-" : "";
-		}
 		else
-		{
 			return ( $this->gateway->homol == "yes" ) ? "-hml" : "";
-		}
 	}
 
 	/**
@@ -152,7 +154,12 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 		return json_decode( $resp, TRUE );
     }
 
-	private function generate_token()
+	/**
+	 * Consulta gateway para gerar token para uso nas chamadas das APIs
+	 *
+	 * @return void
+	 */
+	private function generate_token( $uid = null )
 	{
 		$user = ( $this->gateway->homol == "yes" )
 				? base64_encode( $this->gateway->homol_account . ":" . $this->gateway->homol_password )
@@ -172,7 +179,8 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 			CURLOPT_CUSTOMREQUEST  => "POST",
 			CURLOPT_HTTPHEADER     => [
 				"Origin: " . $this->get_url(),
-				"Authorization: Basic " . $user,
+				"Authorization: Basic $user",
+				( $uid ) ? "uid: $uid" : "",
 			],
 		]);
 
@@ -193,6 +201,11 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 		}
 	}
 
+	/**
+	 * Renova token causo expirado
+	 *
+	 * @return void
+	 */
 	private function renew_token()
 	{
 		$now  = new DateTime();
@@ -201,6 +214,12 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 		if ( $diff->h > 10) $this->generate_token();
 	}
 
+	/**
+	 * Valida qual a bandeira dado o número do cartão
+	 *
+	 * @param array $data
+	 * @return array
+	 */
 	public function get_brand( $data )
 	{
 		$this->renew_token();
@@ -221,8 +240,19 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 		return $resp;
 	}
 
+	/**
+	 * Tokeniza um cartão
+	 *
+	 * @param WP_REST_Request $request
+	 * @return array
+	 */
 	public function create_token( WP_REST_Request $request )
 	{
+		$holder       = $request->get_param( "holder" );
+		$cardNumber   = $request->get_param( "cardNumber" );
+		$securityCode = $request->get_param( "securityCode" );
+		$brand        = $request->get_param( "brand" );
+
 		return $request->get_params();
 	}
 
