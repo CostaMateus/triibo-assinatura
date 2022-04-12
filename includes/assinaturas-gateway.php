@@ -336,7 +336,11 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 					"invalid_card"       => __( "O número do cartão de crédito é inválido.",                             "triibo_assinaturas" ),
 					"invalid_expiry"     => __( "A data de expiração é inválida, por favor, utilize o formato MM / AA.", "triibo_assinaturas" ),
 					"invalid_cvv"        => __( "O código do cartão é inválido.",                                        "triibo_assinaturas" ),
+
 					"invalid_holder"     => __( "Informe o nome do titular do cartão.",                                  "triibo_assinaturas" ),
+					"invalid_h_cpf"      => __( "Informe o CPF do titular do cartão.",                                   "triibo_assinaturas" ),
+					"invalid_h_birth"    => __( "Informe a data de nascimento do titular do cartão.",                    "triibo_assinaturas" ),
+					"invalid_h_phone"    => __( "Informe o telefone do titular do cartão.",                              "triibo_assinaturas" ),
 
 					"expired_date"       => __( "Por favor, verifique a data de expiração e utilize o formato MM / AA.", "triibo_assinaturas" ),
 
