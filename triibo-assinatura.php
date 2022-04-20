@@ -152,6 +152,3 @@ class WC_Triibo_Assinaturas
 }
 
 add_action( "plugins_loaded",           array( "WC_Triibo_Assinaturas",     "get_instance" ), 222 );
-
-// add_action( "wp_ajax_get_brand",        array( "WC_Triibo_Assinaturas_API", "get_brand"    ), 333 );
-// add_action( "wp_ajax_nopriv_get_brand", array( "WC_Triibo_Assinaturas_API", "get_brand"    ), 333 );
