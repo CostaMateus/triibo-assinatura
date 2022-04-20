@@ -41,10 +41,10 @@
             $( "#wc-triibo_assinaturas-cc-form" ).show();
 
             // CPF.
-            $( "#triibo_assinaturas_card_holder_cpf" ).mask( "000.000.000-00" );
+            $( "#triibo_assinaturas-card-holder-cpf" ).mask( "000.000.000-00" );
 
             // Birth Date.
-            $( "#triibo_assinaturas_card_holder_birth_date" ).mask( "00/00/0000" );
+            $( "#triibo_assinaturas-card-holder-birth-date" ).mask( "00/00/0000" );
 
             // Phone.
             var MaskBehavior = function( val ) {
@@ -56,7 +56,7 @@
                     }
                 };
 
-            $( "#triibo_assinaturas_card_holder_phone" ).mask( MaskBehavior, maskOptions );
+            $( "#triibo_assinaturas-card-holder-phone" ).mask( MaskBehavior, maskOptions );
         }
 
         /**
@@ -72,21 +72,21 @@
                 return true;
             }
 
-            if ( !$( "#payment_method_triibo_assinaturas" ).is( ":checked" ) ) return true;
+            if ( ! $( "#payment_method_triibo_assinaturas" ).is( ":checked" ) ) return true;
 
             var form            = $( "form.checkout, form#order_review, form#add_payment_method" ),
                 error           = false,
                 errorHtml       = "",
 
-                holder          = $( "#triibo_assinaturas_card_holder_name",       form ).val(),
-                h_cpf           = $( "#triibo_assinaturas_card_holder_cpf",        form ).val(),
-                h_birth         = $( "#triibo_assinaturas_card_holder_birth_date", form ).val(),
-                h_phone         = $( "#triibo_assinaturas_card_holder_phone",      form ).val(),
+                holder          = $( "#triibo_assinaturas-card-holder-name",       form ).val(),
+                h_cpf           = $( "#triibo_assinaturas-card-holder-cpf",        form ).val(),
+                h_birth         = $( "#triibo_assinaturas-card-holder-birth-date", form ).val(),
+                h_phone         = $( "#triibo_assinaturas-card-holder-phone",      form ).val(),
 
-                cardNumber      = $( "#triibo_assinaturas-card-number", form ).val().replace( /[^\d]/g, "" ),
+                cardNumber      = $( "#triibo_assinaturas-card-number", form ).val(),
                 expirationMonth = $( "#triibo_assinaturas-card-expiry", form ).val().replace( /[^\d]/g, "" ).substr( 0, 2 ),
                 expirationYear  = $( "#triibo_assinaturas-card-expiry", form ).val().replace( /[^\d]/g, "" ).substr( 2 ),
-                cvv             = $( "#triibo_assinaturas-card-cvc",    form ).val(),
+                cvc             = $( "#triibo_assinaturas-card-cvc",    form ).val(),
 
                 creditCardForm  = $( "#wc-triibo_assinaturas-cc-form",  form ),
                 brand           = creditCardForm.attr( "data-credit-card-brand" ),
@@ -131,12 +131,12 @@
                 error      = true;
             }
 
-            // Validate cvv code
-            if ( cvv.length < 3 )
-            {
-                errorHtml += `<li>${wc_triibo_assinaturas_params.messages.invalid_cvv}</li>`;
-                error      = true;
-            }
+            // // Validate cvv code
+            // if ( typeof cvv === 'undefined' || cvv === null || cvv.length < 3 )
+            // {
+            //     errorHtml += `<li>${wc_triibo_assinaturas_params.messages.invalid_cvv}</li>`;
+            //     error      = true;
+            // }
 
             // Validate holder name
             if ( typeof holder === 'undefined' || holder === null || holder === "" )
@@ -175,14 +175,19 @@
             else
             {
                 // Add the hash input.
-                form.append( $( "<input name='triibo_assinaturas_holder'      type='hidden' />" ).val( holder ) );
-                form.append( $( "<input name='triibo_assinaturas_h_cpf'       type='hidden' />" ).val( h_cpf ) );
-                form.append( $( "<input name='triibo_assinaturas_h_birth'     type='hidden' />" ).val( h_birth ) );
-                form.append( $( "<input name='triibo_assinaturas_h_phone'     type='hidden' />" ).val( h_phone ) );
-                form.append( $( "<input name='triibo_assinaturas_card_number' type='hidden' />" ).val( cardNumber ) );
-                form.append( $( "<input name='triibo_assinaturas_exp_month'   type='hidden' />" ).val( expirationMonth ) );
-                form.append( $( "<input name='triibo_assinaturas_exp_year'    type='hidden' />" ).val( expirationYear ) );
-                form.append( $( "<input name='triibo_assinaturas_brand'       type='hidden' />" ).val( brand ) );
+                console.log( $( "#triibo_assinaturas-holder",  form ).val() );
+                console.log( $( "#triibo_assinaturas-h-cpf",   form ).val() );
+                console.log( $( "#triibo_assinaturas-h-birth", form ).val() );
+
+                form.append( $( "<input name='triibo_assinaturas-holder'      type='hidden' />" ).val( holder ) );
+                form.append( $( "<input name='triibo_assinaturas-h-cpf'       type='hidden' />" ).val( h_cpf ) );
+                form.append( $( "<input name='triibo_assinaturas-h-birth'     type='hidden' />" ).val( h_birth ) );
+                form.append( $( "<input name='triibo_assinaturas-h-phone'     type='hidden' />" ).val( h_phone ) );
+                form.append( $( "<input name='triibo_assinaturas-card-number' type='hidden' />" ).val( cardNumber ) );
+                form.append( $( "<input name='triibo_assinaturas-cvc'         type='hidden' />" ).val( cvc ) );
+                form.append( $( "<input name='triibo_assinaturas-exp-month'   type='hidden' />" ).val( expirationMonth ) );
+                form.append( $( "<input name='triibo_assinaturas-exp-year'    type='hidden' />" ).val( expirationYear ) );
+                form.append( $( "<input name='triibo_assinaturas-brand'       type='hidden' />" ).val( brand ) );
 
                 // Submit the form.
                 triibo_assinaturas_submit = true;
@@ -218,9 +223,7 @@
                     url  : `${wc_triibo_assinaturas_params.base_url}/brand/${cardNumber}`,
                     type : "GET",
                     success: function( data ) {
-
                         console.log( data );
-
                         if ( data.success )
                         {
                             if ( data.brandInfo.supported )
