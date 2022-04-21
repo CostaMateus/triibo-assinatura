@@ -2,11 +2,12 @@
  * global wc_triibo_assinaturas_params, wc_checkout_params
  */
 
-(function($) {
+( function( $ )
+{
     "use strict";
 
-    $(function() {
-
+    $( function()
+    {
         var triibo_assinaturas_submit = false;
 
         /**
@@ -48,7 +49,7 @@
 
             // Phone.
             var MaskBehavior = function( val ) {
-                    return val.replace(/\D/g, "" ).length === 13 ? "+55 (00) 00000-0000" : "+55 (00) 0000-00009";
+                    return val.replace( /\D/g, "" ).length === 13 ? "+55 (00) 00000-0000" : "+55 (00) 0000-00009";
                 },
                 maskOptions = {
                     onKeyPress: function( val, e, field, options ) {
@@ -83,7 +84,7 @@
                 h_birth         = $( "#triibo_assinaturas-card-holder-birth-date", form ).val(),
                 h_phone         = $( "#triibo_assinaturas-card-holder-phone",      form ).val(),
 
-                cardNumber      = $( "#triibo_assinaturas-card-number", form ).val(),
+                cardNumber      = $( "#triibo_assinaturas-card-number", form ).val().replace( /\s+/g,  "-" ),
                 expirationMonth = $( "#triibo_assinaturas-card-expiry", form ).val().replace( /[^\d]/g, "" ).substr( 0, 2 ),
                 expirationYear  = $( "#triibo_assinaturas-card-expiry", form ).val().replace( /[^\d]/g, "" ).substr( 2 ),
                 cvc             = $( "#triibo_assinaturas-card-cvc",    form ).val(),
@@ -174,11 +175,6 @@
             }
             else
             {
-                // Add the hash input.
-                console.log( $( "#triibo_assinaturas-holder",  form ).val() );
-                console.log( $( "#triibo_assinaturas-h-cpf",   form ).val() );
-                console.log( $( "#triibo_assinaturas-h-birth", form ).val() );
-
                 form.append( $( "<input name='triibo_assinaturas-holder'      type='hidden' />" ).val( holder ) );
                 form.append( $( "<input name='triibo_assinaturas-h-cpf'       type='hidden' />" ).val( h_cpf ) );
                 form.append( $( "<input name='triibo_assinaturas-h-birth'     type='hidden' />" ).val( h_birth ) );
@@ -199,11 +195,11 @@
 
 
         // Display the payment for and init the input masks.
-        if (typeof wc_checkout_params != "undefined" && wc_checkout_params.is_checkout === "1" )
+        if ( typeof wc_checkout_params != "undefined" && wc_checkout_params.is_checkout === "1" )
         {
-            $("body").on("updated_checkout", function() {
+            $( "body" ).on( "updated_checkout", function() {
                 triiboAssinaturasInitPaymentForm();
-            });
+            } );
         }
         else
         {
@@ -212,18 +208,17 @@
 
 
         // Get the credit card brand.
-        $("body").on("focusout", "#triibo_assinaturas-card-number", function() {
-            let cardNumber = $(this).val();
+        $( "body" ).on( "focusout", "#triibo_assinaturas-card-number", function() {
+            let cardNumber = $( this ).val();
 
-            if (cardNumber.length === 19)
+            if ( cardNumber.length === 19 )
             {
-                cardNumber = cardNumber.replace(/\s+/g, "-");
+                cardNumber = cardNumber.replace( /\s+/g, "-" );
 
-                $.ajax({
+                $.ajax( {
                     url  : `${wc_triibo_assinaturas_params.base_url}/brand/${cardNumber}`,
                     type : "GET",
                     success: function( data ) {
-                        console.log( data );
                         if ( data.success )
                         {
                             if ( data.brandInfo.supported )
@@ -248,48 +243,46 @@
                         $( "body" ).trigger( "triibo_assinaturas_credit_card_brand", "error" );
                         triiboAssinaturasSetCreditCardBrand( "error" );
                     }
-                });
+                } );
             }
-        });
+        } );
 
-        $("body").on("updated_checkout", function() {
-            var field = $("body #triibo_assinaturas-card-number");
+        $( "body" ).on( "updated_checkout", function() {
+            var field = $( "body #triibo_assinaturas-card-number" );
 
-            if (0 < field.length) {
-                field.focusout();
-            }
-        });
+            if ( 0 < field.length ) field.focusout();
+        } );
 
 
         // Set the errors.
-        $("body").on("focus", "#triibo_assinaturas-card-number, #triibo_assinaturas-card-expiry", function() {
-            $("#wc-triibo_assinaturas-cc-form .woocommerce-error").remove();
-        });
+        $( "body" ).on( "focus", "#triibo_assinaturas-card-number, #triibo_assinaturas-card-expiry", function() {
+            $( "#wc-triibo_assinaturas-cc-form .woocommerce-error" ).remove();
+        } );
 
-        $("body").on("triibo_assinaturas_credit_card_brand", function(event, brand) {
-            if ("unsupported" == brand)
+        $( "body" ).on( "triibo_assinaturas_credit_card_brand", function( event, brand ) {
+            if ( "unsupported" == brand )
             {
-                triiboAssinaturasAddErrorMessage(wc_triibo_assinaturas_params.messages.unsupported_card);
+                triiboAssinaturasAddErrorMessage( wc_triibo_assinaturas_params.messages.unsupported_card );
             }
-            else if ("error" == brand)
+            else if ( "error" == brand )
             {
-                triiboAssinaturasAddErrorMessage(wc_triibo_assinaturas_params.messages.invalid_card);
+                triiboAssinaturasAddErrorMessage( wc_triibo_assinaturas_params.messages.invalid_card );
             }
         });
 
 
         // Process the credit card data when submit the checkout form.
-        $("form.checkout").on("checkout_place_order_triibo_assinaturas", function() {
+        $( "form.checkout" ).on( "checkout_place_order_triibo_assinaturas", function() {
             return triiboAssinaturasformHandler();
-        });
+        } );
 
-        $("form#order_review").submit(function() {
+        $( "form#order_review" ).submit( function() {
             return triiboAssinaturasformHandler();
-        });
+        } );
 
-        $("form#add_payment_method").submit(function() {
+        $( "form#add_payment_method" ).submit( function() {
             return triiboAssinaturasformHandler();
-        });
-    });
+        } );
+    } );
 
-}(jQuery));
+}( jQuery ) );
