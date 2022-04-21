@@ -176,13 +176,13 @@
             else
             {
                 form.append( $( "<input name='triibo_assinaturas-holder'      type='hidden' />" ).val( holder ) );
-                form.append( $( "<input name='triibo_assinaturas-h-cpf'       type='hidden' />" ).val( h_cpf ) );
-                form.append( $( "<input name='triibo_assinaturas-h-birth'     type='hidden' />" ).val( h_birth ) );
-                form.append( $( "<input name='triibo_assinaturas-h-phone'     type='hidden' />" ).val( h_phone ) );
-                form.append( $( "<input name='triibo_assinaturas-card-number' type='hidden' />" ).val( cardNumber ) );
+                form.append( $( "<input name='triibo_assinaturas-h_cpf'       type='hidden' />" ).val( h_cpf ) );
+                form.append( $( "<input name='triibo_assinaturas-h_birth'     type='hidden' />" ).val( h_birth ) );
+                form.append( $( "<input name='triibo_assinaturas-h_phone'     type='hidden' />" ).val( h_phone ) );
+                form.append( $( "<input name='triibo_assinaturas-card_number' type='hidden' />" ).val( cardNumber ) );
                 form.append( $( "<input name='triibo_assinaturas-cvc'         type='hidden' />" ).val( cvc ) );
-                form.append( $( "<input name='triibo_assinaturas-exp-month'   type='hidden' />" ).val( expirationMonth ) );
-                form.append( $( "<input name='triibo_assinaturas-exp-year'    type='hidden' />" ).val( expirationYear ) );
+                form.append( $( "<input name='triibo_assinaturas-exp_month'   type='hidden' />" ).val( expirationMonth ) );
+                form.append( $( "<input name='triibo_assinaturas-exp_year'    type='hidden' />" ).val( expirationYear ) );
                 form.append( $( "<input name='triibo_assinaturas-brand'       type='hidden' />" ).val( brand ) );
 
                 // Submit the form.
