@@ -49,7 +49,7 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 			$this->order_button_text  = __( "Prossiga para o pagamento",                                 "triibo_assinaturas" );
 
 			// Subscriptions
-			$this->supports = apply_filters("cielo_assinaturas_supports_array", [
+			$this->supports = apply_filters("triibo_assinaturas_supports_array", [
 				"subscriptions",
 				"subscription_cancellation",
 				"subscription_suspension",
@@ -115,15 +115,13 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 		add_action( "woocommerce_update_options_payment_gateways_" . $this->id, [ $this, "process_admin_options" ] );
 		add_filter( "woocommerce_credit_card_form_fields",                      [ $this, "filter_cc_fields"      ], 10, 2 );
 
-		// add_action( "woocommerce_api_wc_cielo_assinaturas_gateway", 	                       array( $this, "cielo_ipn_handler"     ) );
-		// add_action( "valid_cielo_assinaturas_ipn_request",				                   array( $this, "process_ipn_request"   ) );
-		// add_action( "woocommerce_scheduled_subscription_payment_"              . $this->id, array( $this, "scheduled_subscription_payment"                    ), 10, 2 );
-		// add_action( "woocommerce_subscription_failing_payment_method_updated_" . $this->id, array( $this, "update_failing_payment_method"                     ), 10, 2 );
-		// add_filter( "woocommerce_subscription_payment_meta", 				               array( $this, "add_subscription_payment_meta"                     ), 10, 2 );
-		// add_filter( "woocommerce_subscription_validate_payment_meta", 		               array( $this, "validate_subscription_payment_meta"                ), 10, 2 );
-		// add_action( "woocommerce_subscription_status_updated", 				               array( $this, "subscription_status_changed"                       ), 10, 3 );
-		// add_filter( "woocommerce_can_subscription_be_updated_to_new-payment-method",        array( $this, "can_subscription_be_updated_to_new_payment_method" ), 20, 2 );
-		// add_filter( "woocommerce_subscriptions_update_payment_via_pay_shortcode",           array( $this, "can_update_all_subscriptions"                      ), 20, 3 );
+		// add_action( "woocommerce_scheduled_subscription_payment_"              . $this->id, [ $this, "scheduled_subscription_payment"                    ], 10, 2 );
+		// add_action( "woocommerce_subscription_failing_payment_method_updated_" . $this->id, [ $this, "update_failing_payment_method"                     ], 10, 2 );
+		// add_filter( "woocommerce_subscription_payment_meta",                                [ $this, "add_subscription_payment_meta"                     ], 10, 2 );
+		// add_filter( "woocommerce_subscription_validate_payment_meta",                       [ $this, "validate_subscription_payment_meta"                ], 10, 2 );
+		// add_action( "woocommerce_subscription_status_updated",                              [ $this, "subscription_status_changed"                       ], 10, 3 );
+		// add_filter( "woocommerce_can_subscription_be_updated_to_new-payment-method",        [ $this, "can_subscription_be_updated_to_new_payment_method" ], 20, 2 );
+		// add_filter( "woocommerce_subscriptions_update_payment_via_pay_shortcode",           [ $this, "can_update_all_subscriptions"                      ], 20, 3 );
 	}
 
 	/**
@@ -157,7 +155,7 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	}
 
 	/**
-	 * Returns a value indicating the the Gateway is available or not. It"s called
+	 * Returns a value indicating the the Gateway is available or not. It's called
 	 * automatically by WooCommerce before allowing customers to use the gateway
 	 * for payment.
 	 *
@@ -190,21 +188,17 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	{
 		if ( defined( "WC_VERSION" ) && version_compare( WC_VERSION, "2.2", ">=" ) )
 		{
+			$date      = date( "Y-m-d" );
 			$esc_attr  = esc_attr( $this->id );
-
 			$sanitize  = sanitize_file_name( wp_hash( $this->id ) );
-
-			$admin_url = "admin.php?page=wc-status&tab=logs&log_file=$esc_attr-$sanitize.log";
-
+			$admin_url = "admin.php?page=wc-status&tab=logs&log_file=$esc_attr-$date-$sanitize.log";
 			$link      = esc_url( admin_url( $admin_url ) );
-
 			$text      = __( "System Status &gt; Logs", "triibo_assinaturas" );
 
 			return "<a href='$link' >$text</a>";
 		}
 
 		$esc_attr = esc_attr( $this->id );
-
 		$sanitize = sanitize_file_name( wp_hash( $this->id ) );
 
 		return "<code>woocommerce/logs/$esc_attr-$sanitize.txt</code>";
@@ -235,7 +229,7 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 				"type"        => "textarea",
 				"title"       => __( "Descrição",                                                     "triibo_assinaturas" ),
 				"description" => __( "Controla a descrição que o usuário vê durante o checkout.",     "triibo_assinaturas" ),
-				"default"     => __( "Pague com a Triibo",                                             "triibo_assinaturas" ),
+				"default"     => __( "Pague com a Triibo",                                            "triibo_assinaturas" ),
 			],
 
 			// integração
@@ -253,7 +247,7 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 			"service"         => [
 				"type"        => "select",
-				"title"       => __( "Serviço de pagamento",                                                                                                                 "triibo_assinaturas" ),
+				"title"       => __( "Serviço de pagamento",                                          "triibo_assinaturas" ),
 				"description" => __( "Escolha qual será o serviço de pagamento padrão.",              "triibo_assinaturas" ),
 				"default"     => "cielo",
 				"class"       => "wc-enhanced-select",
@@ -296,14 +290,13 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 			"debug"           => [
 				"type"        => "checkbox",
-				"title"       => __( "Debug Log",       "triibo_assinaturas" ),
-				"label"       => __( "Ativar logger",   "triibo_assinaturas" ),
+				"title"       => __( "Debug Log",                                                     "triibo_assinaturas" ),
+				"label"       => __( "Ativar logger",                                                 "triibo_assinaturas" ),
 				"description" => sprintf( __( "Registrar log de eventos, %s", "triibo_assinaturas" ), $this->get_log_view() ),
 				"default"     => "yes",
 			]
 		];
 	}
-
 
 	/**
 	 * Checkout scripts.
@@ -354,6 +347,60 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	}
 
 	/**
+	 * Filter Credit card form fields
+	 */
+	function filter_cc_fields( $fields, $id )
+	{
+		if ( $id == $this->id )
+		{
+			$id = esc_attr( $this->id );
+
+			$is_update_payment_method = is_wc_endpoint_url("order-pay");
+
+			$fields["card-expiry-field"] =
+			"<p class='form-row form-row-first'>
+				<label for='" . $id . "-card-expiry' >"      . esc_html__( "Validade (MM/YY)", "triibo_assinaturas" ) . "&nbsp;<span class='required' >*</span></label>
+				<input id='"  . $id . "-card-expiry' class='input-text wc-credit-card-form-card-expiry' inputmode='numeric' autocomplete='cc-exp' autocorrect='no' autocapitalize='no' spellcheck='no' type='tel' placeholder='" . esc_attr__( "MM / YY", "triibo_assinaturas" ) . "' " . $this->field_name( "card-expiry" ) . " />
+			</p>";
+
+			$fields["card-name"] =
+			"<p class='form-row form-row-wide'>
+				<label for='" . $id . "-card-holder-name' >" . esc_html__( "Nome do titular", "triibo_assinaturas" ) . "&nbsp;<span class='required' >*</span></label>
+				<input id='"  . $id . "-card-holder-name' class='input-text wc-credit-card-form_card_holder_name' type='text' placeholder='" . esc_attr__( "Informe o nome do titular", "triibo_assinaturas" ) . "' " . $this->field_name( "card-holder-name" ) . " />
+			</p>";
+
+			if ( false === $this->cc_hide_cpf_field       || $is_update_payment_method )
+			{
+				$fields["card-cpf"] =
+				"<p class='form-row form-row-wide'>
+					<label for='" . $id . "-card-holder-cpf' >" . esc_html__( "CPF", "triibo_assinaturas" ) . "&nbsp;<span class='required'>*</span></label>
+					<input id='"  . $id . "-card-holder-cpf' class='input-text wc-credit-card-form_card_holder_cpf' type='tel' placeholder='" . esc_attr__( "000.000.000-00", "triibo_assinaturas" ) . "' " . $this->field_name( "card-holder-cpf" ) . "/>
+				</p>";
+			}
+
+			if ( false === $this->cc_hide_birthdate_field || $is_update_payment_method )
+			{
+				$fields["card-birth-date"] =
+				"<p class='form-row form-row-first'>
+					<label for='" . $id . "-card-holder-birth-date' >" . esc_html__( "Data de nascimento do titular", "triibo_assinaturas" ) . "&nbsp;<span class='required'>*</span></label>
+					<input id='"  . $id . "-card-holder-birth-date' class='input-text wc-credit-card-form_card_holder_birth_date' type='tel' placeholder='" . esc_html__( "DD / MM / YYYY", "triibo_assinaturas" ) . "' " . $this->field_name( "card-holder-birth-date" ) . "/>
+				</p>";
+			}
+
+			if ( false === $this->cc_hide_phone_field     || $is_update_payment_method )
+			{
+				$fields["card-phone"] =
+				"<p class='form-row " . ( "yes" == $this->cc_hide_birthdate_field ? "form-row-first" : "form-row-last" ) . "' >
+					<label for='" . $id . "-card-holder-phone' >" . esc_html__( "Telefone do titular", "triibo_assinaturas" ) . "&nbsp;<span class='required'>*</span></label>
+					<input id='"  . $id . "-card-holder-phone' class='input-text wc-credit-card-form_card_holder_phone' type='tel' placeholder='" . esc_html__( "(xx) xxxx-xxxx", "triibo_assinaturas" ) . "' " . $this->field_name( "card-holder-phone" ) . "/>
+				</p>";
+			}
+		}
+
+		return $fields;
+	}
+
+	/**
 	 * Process the payment
 	 * Function called by WooCommerce to process the payment
 	 *
@@ -369,107 +416,96 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 		}
 	}
 
-
 	public function process_subscription( $order_id )
 	{
-		$order = wc_get_order( $order_id );
+		$order    = wc_get_order( $order_id );
 
-		$this->finalize_order( $order, [] );
+		$cardInfo = [
+			"holder"      => WC()->checkout()->get_value( "triibo_assinaturas-holder"      ),
+			"cpf"         => WC()->checkout()->get_value( "triibo_assinaturas-h_cpf"       ),
+			"birth"       => WC()->checkout()->get_value( "triibo_assinaturas-h_birth"     ),
+			"phone"       => WC()->checkout()->get_value( "triibo_assinaturas-h_phone"     ),
 
-		// Remove cart.
-		WC()->cart->empty_cart();
-
-		return [
-			"result"   => "success",
-			"redirect" => "dev-marketplace.triibo.com.br",
+			"card_number" => WC()->checkout()->get_value( "triibo_assinaturas-card_number" ),
+			"cvc"         => WC()->checkout()->get_value( "triibo_assinaturas-cvc"         ),
+			"month"       => WC()->checkout()->get_value( "triibo_assinaturas-exp_month"   ),
+			"year"        => WC()->checkout()->get_value( "triibo_assinaturas-exp_year"    ),
+			"brand"       => WC()->checkout()->get_value( "triibo_assinaturas-brand"       ),
 		];
 
-		// if ( isset( $_POST["pagseguro_assinaturas_sender_hash"] ) )
-		// {
-		// 	$this->save_sender_hash( $order_id, $_POST["pagseguro_assinaturas_sender_hash"] );
+		$response = $this->api->do_subscription_request( $order, $cardInfo );
 
-		// 	$response = $this->api->do_subscription_request( $order, $_POST );
+		if ( ! $response["success"] )
+		{
+			wc_add_notice( $response["error"], "error" );
 
-		// 	if ( isset( $response["data"] ) )
-		// 	{
-		// 		$this->finalize_order( $order, $response["data"] );
+			return array(
+				"result"   => "fail",
+				"redirect" => ""
+			);
+		}
+		else
+		{
+			$order->update_status("on-hold", __( "Aguardando pagamento", "triibo_assinaturas" ));
 
-		// 		// Remove cart.
-		// 		WC()->cart->empty_cart();
+			$this->finalize_order( $order, $response["data"] );
 
-		// 		if ( isset( $response["url"] ) )
-		// 		{
-		// 			return array(
-		// 				"result"   => "success",
-		// 				"redirect" => $response["url"],
-		// 			);
-		// 		}
-		// 	}
-		// 	else if ( isset( $response["result"] ) && "success" == $response["result"] )
-		// 	{
+			// Remove cart.
+			WC()->cart->empty_cart();
 
-		// 		return array(
-		// 			"result"   => "success",
-		// 			"redirect" => $response["redirect"],
-		// 		);
-
-		// 	}
-		// 	else
-		// 	{
-
-		// 		foreach ( $response["error"] as $error )
-		// 		{
-		// 			wc_add_notice( $error, "error" );
-		// 		}
-
-		// 		return array(
-		// 			"result"   => "fail",
-		// 			"redirect" => ""
-		// 		);
-		// 	}
-		// }
-		// else
-		// {
-		// 	wc_add_notice( __("Your session may have expired. Please refresh the page.", "woocommerce-pagseguro-assinaturas"), "error" );
-
-		// 	return array(
-		// 		"result"   => "fail",
-		// 		"redirect" => "",
-		// 	);
-		// }
+			return [
+				"result"   => "success",
+				"redirect" => $this->get_return_url( $order ),
+			];
+		}
 	}
 
 	/**
 	 * Update order status.
 	 *
-	 * @param array $posted PagSeguro post data.
+	 * @param WC_Order $order Order data
+	 * @param array $data Response data
 	 */
-	public function finalize_order( $order, $data = [] )
+	public function finalize_order( $order, $data )
 	{
+		if ( $data["id"] ) $this->save_triibo_assinatura( $order->get_id(), $data["id"] );
+
 		$order->payment_complete();
 
-		// $this->save_triibo_assinatura( $order->get_id(), $data["assinatura"], $data["tracker"] );
+		return;
+	}
 
-		// if ( isset( $data["transactionCode"] ) )
-		// {
-		// 	if( $order->get_total() > 0 )
-		// 	{
-		// 		update_post_meta($order->get_id(), "_triibo_card_valid", "yes" );
+	/**
+	 * Saves the pre-approval code on the main subscription.
+	 *
+	 * @param int $order_id
+	 * @param string $assinatura Pre-approval code from Pagseguro
+	 * @return null
+	 */
+	protected function save_triibo_assinatura( $order_id, $assinatura )
+	{
+		update_post_meta( $order_id, "_triibo_assinatura_transaction_id", $assinatura );
 
-		// 		$this->save_transaction_code( $order, $data["transactionCode"] );
-		// 	}
-		// 	else
-		// 	{
-		// 		// if order has free trial, value is 0.00, so finish it.
-		// 		$order->payment_complete();
-		// 	}
-		// }
-		// else
-		// {
-		// 	$order->update_status( "on-hold", sprintf( __( "Pagseguro: Waiting for credit card to be validated.", "triibo_assinaturas" ),  $status ) );
-		// }
+		// Also store it on the subscriptions being purchased or paid for in the order
+		if ( wcs_order_contains_subscription( $order_id ) )
+		{
+			$subscriptions = wcs_get_subscriptions_for_order( $order_id );
+		}
+		else if ( wcs_order_contains_renewal( $order_id ) )
+		{
+			$subscriptions = wcs_get_subscriptions_for_renewal_order( $order_id );
+		}
+		else
+		{
+			$subscriptions = [];
+		}
 
-		// return;
+		foreach( $subscriptions as $subscription )
+		{
+			update_post_meta( $subscription->get_id(), "_triibo_assinatura_transaction_id", $assinatura );
+		}
+
+		return;
 	}
 
 	// /**
@@ -564,90 +600,6 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 	// 	return;
 	// }
-
-	/**
-	 * Save transaction code and out order on-hold. Wait for IPN
-	 *
-	 * @access public
-	 * @param string $code
-	 */
-	protected function save_transaction_code( $order, $transactionCode )
-	{
-		// Received transactio code. Now waiting for IPN to update status of order.
-		update_post_meta( $order->get_id(), "_triibo_transaction_id", sanitize_text_field( $transactionCode ) );
-
-		$order->update_status( "on-hold" );
-		$order->add_order_note( __( "PagSeguro: The buyer initiated the transaction, but so far the PagSeguro not received any payment information.", "triibo_assinaturas" ) );
-
-		if ( "yes" === $this->debug )
-		{
-			$this->log->add( $this->id, "PagSeguro payment code for order " . $order->get_id() . " is: " . $transactionCode  );
-		}
-
-		return $transactionCode;
-	}
-
-
-	/**
-	 * IPN handler.
-	 */
-	public function triibo_ipn_handler()
-	{
-		@ob_clean();
-
-		$ipn = $this->api->get_ipn_notification( $_POST );
-
-		if ( $ipn )
-		{
-			header( "HTTP/1.1 200 OK" );
-			do_action( "valid_pagseguro_assinaturas_ipn_request", $ipn );
-			exit();
-		}
-		else
-		{
-			wp_die( esc_html__( "PagSeguro Request Unauthorized", "woocommerce-pagseguro-assinaturass" ), esc_html__( "PagSeguro Request Unauthorized", "triibo_assinaturas" ), [ "response" => 401 ] );
-		}
-	}
-
-
-	/**
-	 * IPN handler hooked to valid_pagseguro_assinaturas_ipn_request.
-	 *
-	 * @param $ipn Posted notification data from pagseguro.
-	 */
-	public function process_ipn_request( $ipn )
-	{
-		if ( defined( "WC_PagSeguro_Assinaturas_IPN" ) ) return;
-
-		define( "WC_PagSeguro_Assinaturas_IPN", true );
-
-		// make sure we wait until the checkout process is over.
-		// potentially remove this on next versions
-		// sleep(2);
-
-		if ( isset( $_POST["notificationCode"] ) && isset( $_POST["notificationType"] ) )
-		{
-			// if( get_transient( "wcpgrn_" . $_POST["notificationCode"]  ) ) {
-			// 	return;
-			// }
-
-			if ( "transaction" == $_POST["notificationType"] )
-			{
-				//update order
-				$this->update_order_status( $ipn );
-
-			}
-			else if ( "preApproval" == $_POST["notificationType"] )
-			{
-				//update subscriptions
-				$this->update_preapproval_status( $ipn );
-			}
-
-			// set_transient( "wcpgrn_" . $_POST["notificationCode"], "1", HOUR_IN_SECONDS );
-		}
-
-		return;
-	}
 
 	// /*
 	//  * Change status of assinatura no pagseguro
@@ -1088,7 +1040,6 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	// /**
 	//  * Get the corresponding period identifier in Pagseguro.
 	//  *
-	//  * @since 2.4
 	//  * @param string $period WooCommerce Subscriptions period
 	//  * @param int $interval WooCommerce Subscriptions interval
 	//  * @return string
@@ -1126,7 +1077,6 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	// /**
 	//  * Get label for Pagseguro period identifier
 	//  *
-	//  * @since 2.4
 	//  * @param string $pagseguro_period Pagseguro pediod identifier
 	//  * @return string
 	//  */
@@ -1152,7 +1102,6 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	//  * Include the payment meta data required to process automatic recurring payments so that store managers can
 	//  * manually set up automatic recurring payments for a customer via the Edit Subscription screen in Subscriptions v2.0+.
 	//  *
-	//  * @since 2.4
 	//  * @param array $payment_meta associative array of meta data required for automatic payments
 	//  * @param WC_Subscription $subscription An instance of a subscription object
 	//  * @return array
@@ -1173,7 +1122,6 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	//  * Validate the payment meta data required to process automatic recurring payments so that store managers can.
 	//  * manually set up automatic recurring payments for a customer via the Edit Subscription screen in Subscriptions 2.0+.
 	//  *
-	//  * @since  2.4
 	//  * @param  string $payment_method_id The ID of the payment method to validate
 	//  * @param  array  $payment_meta associative array of meta data required for automatic payments
 	//  * @throws Exception
@@ -1186,54 +1134,9 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	// 	}
 	// }
 
-	/**
-	 * Saves the pre-approval code on the main subscription.
-	 *
-	 * @since 2.4
-	 * @param int $order_id
-	 * @param string $assinatura Pre-approval code from Pagseguro
-	 * @return null
-	 */
-	protected function save_triibo_assinatura( $order_id, $assinatura, $tracker = "" )
-	{
-		update_post_meta( $order_id, "_triibo_assinatura", $assinatura );
-
-		if( "" != $tracker )
-		{
-			update_post_meta( $order_id, "_triibo_tracker", $tracker );
-		}
-
-		// Also store it on the subscriptions being purchased or paid for in the order
-		if ( wcs_order_contains_subscription( $order_id ) )
-		{
-			$subscriptions = wcs_get_subscriptions_for_order( $order_id );
-		}
-		else if ( wcs_order_contains_renewal( $order_id ) )
-		{
-			$subscriptions = wcs_get_subscriptions_for_renewal_order( $order_id );
-		}
-		else
-		{
-			$subscriptions = [];
-		}
-
-		foreach( $subscriptions as $subscription )
-		{
-			update_post_meta( $subscription->get_id(), "_triibo_assinatura", $assinatura );
-
-			if( "" != $tracker )
-			{
-				update_post_meta( $subscription->get_id(), "_triibo_tracker", $tracker );
-			}
-		}
-
-		return;
-	}
-
 	// /**
 	//  * Saves sender hash for later use.
 	//  *
-	//  * @since 2.4
 	//  * @param int $order_id
 	//  * @param string $hash Sender hash generated with Javascript on front end.
 	//  * @return null
@@ -1287,60 +1190,6 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 			parent::payment_fields();
 		}
-	}
-
-	/**
-	 * Filter Credit card form fields
-	 */
-	function filter_cc_fields( $fields, $id )
-	{
-		if ( $id == $this->id )
-		{
-			$id = esc_attr( $this->id );
-
-			$is_update_payment_method = is_wc_endpoint_url("order-pay");
-
-			$fields["card-expiry-field"] =
-			"<p class='form-row form-row-first'>
-				<label for='" . $id . "-card-expiry' >"      . esc_html__( "Validade (MM/YY)", "triibo_assinaturas" ) . "&nbsp;<span class='required' >*</span></label>
-				<input id='"  . $id . "-card-expiry' class='input-text wc-credit-card-form-card-expiry' inputmode='numeric' autocomplete='cc-exp' autocorrect='no' autocapitalize='no' spellcheck='no' type='tel' placeholder='" . esc_attr__( "MM / YY", "triibo_assinaturas" ) . "' " . $this->field_name( "card-expiry" ) . " />
-			</p>";
-
-			$fields["card-name"] =
-			"<p class='form-row form-row-wide'>
-				<label for='" . $id . "_card_holder_name' >" . esc_html__( "Nome do titular", "triibo_assinaturas" )    . "&nbsp;<span class='required' >*</span></label>
-				<input id='"  . $id . "_card_holder_name' name='" . $id . "_card_holder_name' class='input-text wc-credit-card-form_card_holder_name' type='text' placeholder='" . esc_attr__( "Informe o nome do titular", "triibo_assinaturas" ) . "' />
-			</p>";
-
-			if ( false === $this->cc_hide_cpf_field       || $is_update_payment_method )
-			{
-				$fields["card-cpf"] =
-				"<p class='form-row form-row-wide'>
-					<label for='" . $id . "_card_holder_cpf' >" . esc_html__( "CPF", "triibo_assinaturas" ) . "&nbsp;<span class='required'>*</span></label>
-					<input id='"  . $id . "_card_holder_cpf' name=" . $id . "_card_holder_cpf' class='input-text wc-credit-card-form_card_holder_cpf' type='tel' placeholder='" . esc_attr__( "000.000.000-00", "triibo_assinaturas" ) . "' />
-				</p>";
-			}
-
-			if ( false === $this->cc_hide_birthdate_field || $is_update_payment_method )
-			{
-				$fields["card-birth-date"] =
-				"<p class='form-row form-row-first'>
-					<label for='" . $id . "_card_holder_birth_date' >" . esc_html__( "Data de nascimento do titular", "triibo_assinaturas" ) . "&nbsp;<span class='required'>*</span></label>
-					<input id='"  . $id . "_card_holder_birth_date' name='" . $id . "_card_holder_birth_date' class='input-text wc-credit-card-form_card_holder_birth_date' type='tel' placeholder='" . esc_html__( "DD / MM / YYYY", "triibo_assinaturas" ) . "'/>
-				</p>";
-			}
-
-			if ( false === $this->cc_hide_phone_field     || $is_update_payment_method )
-			{
-				$fields["card-phone"] =
-				"<p class='form-row " . ( "yes" == $this->cc_hide_birthdate_field ? "form-row-first" : "form-row-last" ) . "' >
-					<label for='" . $id . "_card_holder_phone' >" . esc_html__( "Telefone do titular", "triibo_assinaturas" ) . "&nbsp;<span class='required'>*</span></label>
-					<input id='"  . $id . "_card_holder_phone' name='" . $id . "_card_holder_phone' class='input-text wc-credit-card-form_card_holder_phone' type='tel' placeholder='" . esc_html__( "(xx) xxxx-xxxx", "triibo_assinaturas" ) . "' />
-				</p>";
-			}
-		}
-
-		return $fields;
 	}
 
 	// /**
