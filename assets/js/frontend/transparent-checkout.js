@@ -44,20 +44,20 @@
             // CPF.
             $( "#triibo_assinaturas-card-holder-cpf" ).mask( "000.000.000-00" );
 
-            // Birth Date.
-            $( "#triibo_assinaturas-card-holder-birth-date" ).mask( "00/00/0000" );
+            // // Birth Date.
+            // $( "#triibo_assinaturas-card-holder-birth-date" ).mask( "00/00/0000" );
 
-            // Phone.
-            var MaskBehavior = function( val ) {
-                    return val.replace( /\D/g, "" ).length === 13 ? "+55 (00) 00000-0000" : "+55 (00) 0000-00009";
-                },
-                maskOptions = {
-                    onKeyPress: function( val, e, field, options ) {
-                        field.mask( MaskBehavior.apply( {}, arguments ), options );
-                    }
-                };
+            // // Phone.
+            // var MaskBehavior = function( val ) {
+            //         return val.replace( /\D/g, "" ).length === 13 ? "+55 (00) 00000-0000" : "+55 (00) 0000-00009";
+            //     },
+            //     maskOptions = {
+            //         onKeyPress: function( val, e, field, options ) {
+            //             field.mask( MaskBehavior.apply( {}, arguments ), options );
+            //         }
+            //     };
 
-            $( "#triibo_assinaturas-card-holder-phone" ).mask( MaskBehavior, maskOptions );
+            // $( "#triibo_assinaturas-card-holder-phone" ).mask( MaskBehavior, maskOptions );
         }
 
         /**
@@ -81,8 +81,8 @@
 
                 holder          = $( "#triibo_assinaturas-card-holder-name",       form ).val(),
                 h_cpf           = $( "#triibo_assinaturas-card-holder-cpf",        form ).val(),
-                h_birth         = $( "#triibo_assinaturas-card-holder-birth-date", form ).val(),
-                h_phone         = $( "#triibo_assinaturas-card-holder-phone",      form ).val(),
+                // h_birth         = $( "#triibo_assinaturas-card-holder-birth-date", form ).val(),
+                // h_phone         = $( "#triibo_assinaturas-card-holder-phone",      form ).val(),
 
                 cardNumber      = $( "#triibo_assinaturas-card-number", form ).val().replace( /\s+/g,  "-" ),
                 expirationMonth = $( "#triibo_assinaturas-card-expiry", form ).val().replace( /[^\d]/g, "" ).substr( 0, 2 ),
@@ -153,19 +153,19 @@
                 error      = true;
             }
 
-            // Validate holder birthdate
-            if ( typeof h_birth === 'undefined' || h_birth === null || h_birth === "" )
-            {
-                errorHtml += `<li>${wc_triibo_assinaturas_params.messages.invalid_h_birth}</li>`;
-                error      = true;
-            }
+            // // Validate holder birthdate
+            // if ( typeof h_birth === 'undefined' || h_birth === null || h_birth === "" )
+            // {
+            //     errorHtml += `<li>${wc_triibo_assinaturas_params.messages.invalid_h_birth}</li>`;
+            //     error      = true;
+            // }
 
-            // Validate holder phone
-            if ( typeof h_phone === 'undefined' || h_phone === null || h_phone === "" )
-            {
-                errorHtml += `<li>${wc_triibo_assinaturas_params.messages.invalid_h_phone}</li>`;
-                error      = true;
-            }
+            // // Validate holder phone
+            // if ( typeof h_phone === 'undefined' || h_phone === null || h_phone === "" )
+            // {
+            //     errorHtml += `<li>${wc_triibo_assinaturas_params.messages.invalid_h_phone}</li>`;
+            //     error      = true;
+            // }
 
             errorHtml += "</ul>";
 
@@ -177,8 +177,8 @@
             {
                 form.append( $( "<input name='triibo_assinaturas-holder'      type='hidden' />" ).val( holder ) );
                 form.append( $( "<input name='triibo_assinaturas-h_cpf'       type='hidden' />" ).val( h_cpf ) );
-                form.append( $( "<input name='triibo_assinaturas-h_birth'     type='hidden' />" ).val( h_birth ) );
-                form.append( $( "<input name='triibo_assinaturas-h_phone'     type='hidden' />" ).val( h_phone ) );
+                // form.append( $( "<input name='triibo_assinaturas-h_birth'     type='hidden' />" ).val( h_birth ) );
+                // form.append( $( "<input name='triibo_assinaturas-h_phone'     type='hidden' />" ).val( h_phone ) );
                 form.append( $( "<input name='triibo_assinaturas-card_number' type='hidden' />" ).val( cardNumber ) );
                 form.append( $( "<input name='triibo_assinaturas-cvc'         type='hidden' />" ).val( cvc ) );
                 form.append( $( "<input name='triibo_assinaturas-exp_month'   type='hidden' />" ).val( expirationMonth ) );
