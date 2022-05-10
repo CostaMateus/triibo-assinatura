@@ -204,7 +204,8 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 
 		$response = $this->exec("payments/brand", $params);
 
-		$params["payload"]["cardNumber"] = "****-****-****-" . substr( $data["cardNumber"], -4 );
+		// $params["payload"]["cardNumber"] = "****-****-****-" . substr( $data["cardNumber"], -4 );
+		// $this->log( "INFO - get_brand : " . json_encode( [ $params, $response ] ) );
 
 		return $response;
 	}
@@ -274,6 +275,7 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 					"orderId"     => $data["orderId"],
 					"totalAmount" => $data["totalAmount"], // em centavos
 					"description" => $data["description"],
+					"tokenIndex"  => $data["tokenIndex"],
 					"name"        => $data["name"],
 					"document"    => $data["document"],
 					"cellPhone"   => $data["phone"],
@@ -388,7 +390,7 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 
 				return [
 					"success" => false,
-					"error"   => "2. " . $error
+					"error"   => "2. $error"
 				];
 			}
 
@@ -398,16 +400,19 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 				$item  = current( $order->get_items() );
 				$desc  = $item->get_name();
 
-				$total = $order->get_total() * 100; // em centavos
+				$total = intval( strval( $order->get_total() * 100 ) ); // em centavos
 				$name  = $order->get_user()->get( "display_name" ) ?: $posted["holder"];
 				$doc   = $order->get_meta( "_billing_cpf", true )  ?: $posted["cpf"];
 				$phone = "+" . preg_replace( "/\D/", "", $posted["phone"] );
+
+				$index = $response["tokenInfo"]["index"];
 
 				$data  = [
 					"uid"         => $uid,
 					"orderId"     => $order->ID,
 					"totalAmount" => $total, // em centavos
 					"description" => $desc,
+					"tokenIndex"  => $index,
 					"name"        => $name,
 					"document"    => $doc,
 					"phone"       => $phone,
@@ -431,11 +436,11 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 			{
 				$error = "Ocorreu um erro ao processar seu pagamento, tente novamente.";
 
-				$this->log( "ERROR - do_payment : " . json_encode( [ $error, $response ] ) );
+				$this->log( "ERROR - do_payment : " . json_encode( [ $error, $response, $data ] ) );
 
 				return [
 					"success" => false,
-					"error"   => "3. " . $error
+					"error"   => "3. $error"
 				];
 			}
 
