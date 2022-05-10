@@ -69,24 +69,22 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 			$this->init_settings();
 
 			// Define user set variables.
-			$this->title                   = $this->get_option( "title"            );
-			$this->description             = $this->get_option( "description"      );
+			$this->title             = $this->get_option( "title"            );
+			$this->description       = $this->get_option( "description"      );
 
-			$this->mkt_homol               = $this->get_option( "mkt_homol", "yes" );
-			$this->homol                   = $this->get_option( "homol",     "yes" );
+			$this->mkt_homol         = $this->get_option( "mkt_homol", "yes" );
+			$this->homol             = $this->get_option( "homol",     "yes" );
 
-			$this->homol_account           = $this->get_option( "homol_account"    );
-			$this->homol_password          = $this->get_option( "homol_password"   );
+			$this->homol_account     = $this->get_option( "homol_account"    );
+			$this->homol_password    = $this->get_option( "homol_password"   );
 
-			$this->account                 = $this->get_option( "account"          );
-			$this->password                = $this->get_option( "password"         );
+			$this->account           = $this->get_option( "account"          );
+			$this->password          = $this->get_option( "password"         );
 
-			$this->service                 = $this->get_option( "service"          );
-			$this->debug                   = $this->get_option( "debug"            );
+			$this->service           = $this->get_option( "service"          );
+			$this->debug             = $this->get_option( "debug"            );
 
-			$this->cc_hide_cpf_field       = apply_filters('triibo_assinaturas_hide_cpf_field',       false);
-			// $this->cc_hide_birthdate_field = apply_filters('triibo_assinaturas_hide_birthdate_field', false);
-			// $this->cc_hide_phone_field     = apply_filters('triibo_assinaturas_hide_phone_field',     false);
+			$this->cc_hide_cpf_field = apply_filters('triibo_assinaturas_hide_cpf_field',       false);
 
 			// Active logs.
 			if ( $this->debug == "yes" )
@@ -339,8 +337,6 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 					"invalid_holder"     => __( "Informe o nome do titular do cartão.",                                  "triibo_assinaturas" ),
 					"invalid_h_cpf"      => __( "Informe o CPF do titular do cartão.",                                   "triibo_assinaturas" ),
-					// "invalid_h_birth"    => __( "Informe a data de nascimento do titular do cartão.",                    "triibo_assinaturas" ),
-					// "invalid_h_phone"    => __( "Informe o telefone do titular do cartão.",                              "triibo_assinaturas" ),
 
 					"expired_date"       => __( "Por favor, verifique a data de expiração e utilize o formato MM / AA.", "triibo_assinaturas" ),
 
@@ -384,24 +380,6 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 					<input id='"  . $id . "-card-holder-cpf' class='input-text wc-credit-card-form_card_holder_cpf' type='tel' placeholder='" . esc_attr__( "000.000.000-00", "triibo_assinaturas" ) . "' " . $this->field_name( "card-holder-cpf" ) . "/>
 				</p>";
 			}
-
-			// if ( false === $this->cc_hide_birthdate_field || $is_update_payment_method )
-			// {
-			// 	$fields["card-birth-date"] =
-			// 	"<p class='form-row form-row-first'>
-			// 		<label for='" . $id . "-card-holder-birth-date' >" . esc_html__( "Data de nascimento do titular", "triibo_assinaturas" ) . "&nbsp;<span class='required'>*</span></label>
-			// 		<input id='"  . $id . "-card-holder-birth-date' class='input-text wc-credit-card-form_card_holder_birth_date' type='tel' placeholder='" . esc_html__( "DD / MM / YYYY", "triibo_assinaturas" ) . "' " . $this->field_name( "card-holder-birth-date" ) . "/>
-			// 	</p>";
-			// }
-
-			// if ( false === $this->cc_hide_phone_field     || $is_update_payment_method )
-			// {
-			// 	$fields["card-phone"] =
-			// 	"<p class='form-row " . ( "yes" == $this->cc_hide_birthdate_field ? "form-row-first" : "form-row-last" ) . "' >
-			// 		<label for='" . $id . "-card-holder-phone' >" . esc_html__( "Telefone do titular", "triibo_assinaturas" ) . "&nbsp;<span class='required'>*</span></label>
-			// 		<input id='"  . $id . "-card-holder-phone' class='input-text wc-credit-card-form_card_holder_phone' type='tel' placeholder='" . esc_html__( "(xx) xxxx-xxxx", "triibo_assinaturas" ) . "' " . $this->field_name( "card-holder-phone" ) . "/>
-			// 	</p>";
-			// }
 		}
 
 		return $fields;
@@ -434,7 +412,6 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 		$cardInfo  = [
 			"holder"      => WC()->checkout()->get_value( "triibo_assinaturas-holder"      ),
 			"cpf"         => WC()->checkout()->get_value( "triibo_assinaturas-h_cpf"       ),
-			// "birth"       => WC()->checkout()->get_value( "triibo_assinaturas-h_birth"     ),
 			"phone"       => $triibo_id,
 
 			"card_number" => WC()->checkout()->get_value( "triibo_assinaturas-card_number" ),
