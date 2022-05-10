@@ -69,19 +69,20 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 			$this->init_settings();
 
 			// Define user set variables.
-			$this->title                   = $this->get_option( "title"          );
-			$this->description             = $this->get_option( "description"    );
+			$this->title                   = $this->get_option( "title"            );
+			$this->description             = $this->get_option( "description"      );
 
-			$this->homol                   = $this->get_option( "homol", "yes"   );
+			$this->mkt_homol               = $this->get_option( "mkt_homol", "yes" );
+			$this->homol                   = $this->get_option( "homol",     "yes" );
 
-			$this->homol_account           = $this->get_option( "homol_account"  );
-			$this->homol_password          = $this->get_option( "homol_password" );
+			$this->homol_account           = $this->get_option( "homol_account"    );
+			$this->homol_password          = $this->get_option( "homol_password"   );
 
-			$this->account                 = $this->get_option( "account"        );
-			$this->password                = $this->get_option( "password"       );
+			$this->account                 = $this->get_option( "account"          );
+			$this->password                = $this->get_option( "password"         );
 
-			$this->service                 = $this->get_option( "service"        );
-			$this->debug                   = $this->get_option( "debug"          );
+			$this->service                 = $this->get_option( "service"          );
+			$this->debug                   = $this->get_option( "debug"            );
 
 			$this->cc_hide_cpf_field       = apply_filters('triibo_assinaturas_hide_cpf_field',       false);
 			// $this->cc_hide_birthdate_field = apply_filters('triibo_assinaturas_hide_birthdate_field', false);
@@ -240,8 +241,14 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 			],
 			"homol"           => [
 				"type"        => "checkbox",
-				"title"       => __( "Gateway HOMOL",                                                 "triibo_assinaturas" ),
-				"label"       => __( "Ativar Gateway Triibo de homologação",                          "triibo_assinaturas" ),
+				"title"       => __( "API HOMOL",                                                     "triibo_assinaturas" ),
+				"label"       => __( "Ativar API Triibo de homologação",                              "triibo_assinaturas" ),
+				"default"     => "yes",
+			],
+			"mkt_homol"         => [
+				"type"        => "checkbox",
+				"title"       => __( "Marketplace HOMOL",                                             "triibo_assinaturas" ),
+				"label"       => __( "Ativar ambiente Marketplace de homologação",                    "triibo_assinaturas" ),
 				"default"     => "yes",
 			],
 
