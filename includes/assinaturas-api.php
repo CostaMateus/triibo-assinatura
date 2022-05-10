@@ -61,128 +61,30 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 				],
 			]
 		);
-
-		// register_rest_route(
-		// 	$this->namespace,
-		// 	"/token",
-		// 	[
-		// 		"methods"             => WP_REST_Server::CREATABLE, // POST
-		// 		"callback"            => [ $this, "create_token" ],
-		// 		"permission_callback" => "__return_true",
-		// 		"args"                => [
-		// 			"holder"         => [
-		// 				"required" => true,
-		// 				"type"     => "string",
-		// 			],
-		// 			"cardNumber"     => [
-		// 				"required" => true,
-		// 				"type"     => "string",
-		// 			],
-		// 			"expirationDate" => [
-		// 				"required" => true,
-		// 				"type"     => "string",
-		// 			],
-		// 			"securityCode"   => [
-		// 				"required" => true,
-		// 				"type"     => "string",
-		// 			],
-		// 			"brand"          => [
-		// 				"required" => true,
-		// 				"type"     => "string",
-		// 			],
-		// 			"uid"          => [
-		// 				"required" => true,
-		// 				"type"     => "string",
-		// 			],
-		// 		],
-		// 	]
-		// );
-
-		// register_rest_route(
-		// 	$this->namespace,
-		// 	"/uid",
-		// 	[
-		// 		"methods"             => WP_REST_Server::CREATABLE, // POST
-		// 		"callback"            => [ $this, "get_uid_triibo" ],
-		// 		"permission_callback" => "__return_true",
-		// 		"args"                => [
-		// 			"phone" => [
-		// 				"required" => true,
-		// 				"type"     => "string",
-		// 			],
-		// 		],
-		// 	]
-		// );
-
-		// register_rest_route(
-		// 	$this->namespace,
-		// 	"/payment",
-		// 	[
-		// 		"methods"             => WP_REST_Server::CREATABLE, // POST
-		// 		"callback"            => [ $this, "do_payment" ],
-		// 		"permission_callback" => "__return_true",
-		// 		"args"                => [
-		// 			"orderId"     => [
-		// 				"required" => true,
-		// 				"type"     => "integer",
-		// 			],
-		// 			"totalAmount" => [
-		// 				"required" => true,
-		// 				"type"     => "number",
-		// 			],
-		// 			"description" => [
-		// 				"required" => true,
-		// 				"type"     => "string",
-		// 			],
-		// 			"name"        => [
-		// 				"required" => true,
-		// 				"type"     => "string",
-		// 			],
-		// 			"document"    => [
-		// 				"required" => true,
-		// 				"type"     => "string",
-		// 			],
-		// 			"phone"       => [
-		// 				"required" => true,
-		// 				"type"     => "string",
-		// 			],
-		// 		],
-		// 	]
-		// );
 	}
 
 	/**
-	 * Retorna parte da URL de acordo com o ambiente
-	 *
-	 * @param boolean $mkt
-	 * @return string
-	 */
-	protected function get_env( $mkt = false )
-	{
-		if ( $mkt )
-			return ( $this->gateway->homol == "yes" ) ? "dev-" : "";
-		else
-			return ( $this->gateway->homol == "yes" ) ? "-hml" : "";
-	}
-
-	/**
-	 * Retorna URL da api Triibo Marketplace
+	 * Retorna URL do Marketplace Dev
 	 *
 	 * @return string
 	 */
 	public function get_url()
 	{
-		return "https://" . $this->get_env( true ) . "marketplace.triibo.com.br";
+		$env = ( $this->gateway->mkt_homol == "yes" ) ? "dev-" : "";
+
+		return "https://" . $env . "marketplace.triibo.com.br";
 	}
 
 	/**
-	 * Retorna URL da api Triibo Node
+	 * Retorna URL da API Triibo Node
 	 *
 	 * @return void
 	 */
 	public function get_api_url()
 	{
-		return "https://api" . $this->get_env() . ".triibo.com.br";
+		$env = ( $this->gateway->homol == "yes" ) ? "-hml" : "";
+
+		return "https://api" . $env . ".triibo.com.br";
 	}
 
 	private function exec($api, $params = null)
@@ -304,8 +206,6 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 
 		$params["payload"]["cardNumber"] = "****-****-****-" . substr( $data["cardNumber"], -4 );
 
-		// $this->log( "INFO - get_brand : " . json_encode( [ $params, $response ] ) );
-
 		return $response;
 	}
 
@@ -337,7 +237,7 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	 * @param array $data
 	 * @return array
 	 */
-	private function create_token( $data )
+	private function create_card_token( $data )
 	{
 		$this->renew_token( $data["uid"] );
 
@@ -478,13 +378,13 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 				"brand"          => $posted["brand"],
 			];
 
-			$response = $this->create_token( $data );
+			$response = $this->create_card_token( $data );
 
 			if ( ! $response["success"] )
 			{
 				$error = "Falha ao consultar token.";
 
-				$this->log( "ERROR - create_token : " . json_encode( [ $error, $response ] ) );
+				$this->log( "ERROR - create_card_token : " . json_encode( [ $error, $response ] ) );
 
 				return [
 					"success" => false,

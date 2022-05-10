@@ -151,4 +151,4 @@ class WC_Triibo_Assinaturas
 
 }
 
-add_action( "plugins_loaded",           array( "WC_Triibo_Assinaturas",     "get_instance" ), 222 );
+add_action( "plugins_loaded", array( "WC_Triibo_Assinaturas", "get_instance" ), 222 );
