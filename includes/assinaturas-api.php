@@ -39,8 +39,6 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	{
 		$this->gateway = $gateway;
 
-		$this->generate_token();
-
 		add_action("rest_api_init", [ $this, "register_routes" ] );
 	}
 
@@ -159,10 +157,12 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 		{
 			$this->token      = $resp["token"];
 			$this->date_token = new DateTime();
+			return;
 		}
 		else
 		{
 			$this->generate_token( $uid );
+			return;
 		}
 	}
 
@@ -179,10 +179,18 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 			return;
 		}
 
+		if ( ! $this->date_token )
+		{
+			$this->generate_token();
+			return;
+		}
+
 		$now  = new DateTime();
 		$diff = $now->diff( $this->date_token );
 
 		if ( $diff->h > 10 ) $this->generate_token();
+
+		return;
 	}
 
 	/**
