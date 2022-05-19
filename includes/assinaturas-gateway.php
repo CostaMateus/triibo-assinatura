@@ -487,23 +487,25 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	 */
 	public function finalize_order( $order, $data )
 	{
-		if ( $data["id"] ) $this->save_triibo_assinatura( $order->get_id(), $data["id"] );
+		if ( $data["id"] ) $this->save_triibo_payment_data( $order->get_id(), $data );
 
 		$order->payment_complete();
+		$order->update_status( "completed" );
 
 		return;
 	}
 
 	/**
-	 * Saves the pre-approval code on the main subscription.
+	 * Saves the payment_id on the main subscription.
 	 *
 	 * @param int $order_id
-	 * @param string $assinatura Pre-approval code from Pagseguro
+	 * @param array $data Data from payment
 	 * @return null
 	 */
-	protected function save_triibo_assinatura( $order_id, $assinatura )
+	protected function save_triibo_payment_data( $order_id, $data )
 	{
-		update_post_meta( $order_id, "_triibo_assinatura_transaction_id", $assinatura );
+		update_post_meta( $order_id, "_triibo_assinatura_payment_id",    $data["id"]    );
+		update_post_meta( $order_id, "_triibo_assinatura_payment_token", $data["token"] );
 
 		// Also store it on the subscriptions being purchased or paid for in the order
 		if ( wcs_order_contains_subscription( $order_id ) )
@@ -521,7 +523,8 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 		foreach( $subscriptions as $subscription )
 		{
-			update_post_meta( $subscription->get_id(), "_triibo_assinatura_transaction_id", $assinatura );
+			update_post_meta( $subscription->get_id(), "_triibo_assinatura_payment_id",    $data["id"]    );
+			update_post_meta( $subscription->get_id(), "_triibo_assinatura_payment_token", $data["token"] );
 		}
 
 		return;
