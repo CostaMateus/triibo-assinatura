@@ -111,6 +111,40 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	}
 
 	/**
+	 * Verifica validade do token, se vencido, gera um novo
+	 *
+	 * @return void
+	 */
+	public function validate_token( $user_id )
+	{
+		$uid      = get_user_meta( $user_id, "_triibo_id",            true );
+		$token    = get_user_meta( $user_id, "_triibo_auth_token",    true );
+		$validity = get_user_meta( $user_id, "_triibo_auth_validity", true );
+
+		if ( !$token )
+		{
+			$this->log( "validate_token(): user without token" );
+			$this->generate_token( $uid, $user_id );
+		}
+		else
+		{
+			$dtval = DateTime::createFromFormat( "Y-m-d H:i:s", $validity );
+			$now   = new DateTime();
+			$diff  = $now->diff( $dtval );
+
+			if ( $diff->h > 10 )
+			{
+				$this->log( "validate_token(): experied token" );
+				$this->generate_token( $uid, $user_id );
+			}
+		}
+
+		$token = get_user_meta( $user_id, "_triibo_auth_token", true );
+
+		return $token;
+	}
+
+	/**
 	 * Executa as chamadas
 	 *
 	 * @param string $api 		Rota da api a ser chamada
@@ -166,33 +200,6 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 
 		return json_decode( $resp, TRUE );
     }
-
-	/**
-	 * Renova token causo expirado
-	 *
-	 * @return void
-	 */
-	private function renew_token( $uid = null )
-	{
-		if ( $uid )
-		{
-			$this->generate_token( $uid );
-			return;
-		}
-
-		if ( ! $this->date_token )
-		{
-			$this->generate_token();
-			return;
-		}
-
-		$now  = new DateTime();
-		$diff = $now->diff( $this->date_token );
-
-		if ( $diff->h > 10 ) $this->generate_token();
-
-		return;
-	}
 
 	/**
 	 * Valida qual a bandeira dado o número do cartão
