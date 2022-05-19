@@ -390,6 +390,24 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	}
 
 	/**
+	 * Payment Fields Hook.
+	 */
+	public function payment_fields()
+	{
+		if ( ( class_exists( "WC_Subscriptions_Cart" ) && WC_Subscriptions_Cart::cart_contains_subscription() )
+			|| wcs_cart_contains_resubscribe()
+			|| wcs_cart_contains_renewal()
+			|| WC_Subscriptions_Change_Payment_Gateway::$is_request_to_change_payment )
+		{
+			$description = ( "yes" == $this->homol ) ? $this->get_description() . __( " - HOMOL ativado.", "triibo_assinaturas" ) : $this->get_description();
+
+			if ( $description ) echo wpautop( wptexturize( trim( $description ) ) );
+
+			parent::payment_fields();
+		}
+	}
+
+	/**
 	 * Process the payment
 	 * Function called by WooCommerce to process the payment
 	 *
@@ -1098,16 +1116,18 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	//  * @param WC_Subscription $subscription An instance of a subscription object
 	//  * @return array
 	//  */
-	// public function add_subscription_payment_meta( $payment_meta, $subscription ) {
+	// public function add_subscription_payment_meta( $payment_meta, $subscription )
+	// {
  	// 	$payment_meta[ $this->id ] = array(
 	// 		"post_meta" => array(
 	// 			"_pagseguro_assinatura" => array(
-	// 				"value" => get_post_meta( $subscription->get_id(), "_pagseguro_assinatura", true ),
-	// 				"label" => "Código do Cliente - PagSeguro Assinatura ",
+	// 				"value" => get_post_meta( $subscription->get_id(), "_triibo_assinatura_payment_id", true ),
+	// 				"label" => "Código do Cliente - Triibo Assinatura ",
 	// 			),
 	// 		),
 	// 	);
- 	// 	return $payment_meta;
+	//
+	// 	return $payment_meta;
 	// }
 
 	// /**
@@ -1166,24 +1186,6 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	// }
 
 
-	/**
-	 * Payment Fields Hook.
-	 */
-	public function payment_fields()
-	{
-		if ( ( class_exists( "WC_Subscriptions_Cart" ) && WC_Subscriptions_Cart::cart_contains_subscription() )
-			|| wcs_cart_contains_resubscribe()
-			|| wcs_cart_contains_renewal()
-			|| WC_Subscriptions_Change_Payment_Gateway::$is_request_to_change_payment )
-		{
-			$description = ( "yes" == $this->homol ) ? $this->get_description() . __( " - HOMOL ativado.", "triibo_assinaturas" ) : $this->get_description();
-
-			if ( $description ) echo wpautop( wptexturize( trim( $description ) ) );
-
-			parent::payment_fields();
-		}
-	}
-
 	// /**
 	//  *
 	//  * For the recurring payment method to be changeable, the subscription must be active, have future (automatic) payments
@@ -1215,11 +1217,9 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	//  * @return bool Flag indicating whether the other subscriptions can be updated.
 	//  */
 	// function can_update_all_subscriptions( $can_update, $gateway_id, $subscription ) {
-
 	// 	if( $this->id == $gateway_id ) {
 	// 		return false;
 	// 	}
-
 	// 	return $can_update;
 	// }
 
