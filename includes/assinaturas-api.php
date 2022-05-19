@@ -344,26 +344,7 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 
 		if ( $order_contains_failed_renewal || ! empty( $subscription ) )
 		{
-			// Search for user triibo
-			$response = $this->get_uid_triibo( $posted["phone"] );
-
-			if ( ! $response["success"] || $response["uid"] === null )
-			{
-				$error = isset( $response["error"] ) ? "Falha ao consultar usuario Triibo." : "Usuario Triibo nao encontrado.";
-
-				$this->log( "ERROR - get_uid_triibo : " . json_encode( [ $error, $response ] ) );
-
-				return [
-					"success" => false,
-					"error"   => "1. $error"
-				];
-			}
-
-			$uid      = $response["uid"];
-
-			// Creating a card token for the user
 			$data     = [
-				"uid"            => $uid,
 				"holder"         => $posted["holder"],
 				"cardNumber"     => $posted["card_number"],
 				"expirationDate" => $posted["month"] . "/" . $posted["year"],
@@ -371,8 +352,10 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 				"brand"          => $posted["brand"],
 			];
 
-			$response = $this->create_card_token( $data );
+			// CRIANDO TOKEN DO CARTÃO
+			$response = $this->create_card_token( $data, $posted["token"] );
 
+			// FALHA NA CRIAÇÃO DO TOKEN DO CARTÃo
 			if ( ! $response["success"] )
 			{
 				$error = "Falha ao consultar token.";
@@ -387,7 +370,6 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 
 			if ( $order->get_total() > 0 )
 			{
-				// Doing the payment request
 				$item  = current( $order->get_items() );
 				$desc  = $item->get_name();
 
@@ -396,23 +378,25 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 				$doc   = $order->get_meta( "_billing_cpf", true )  ?: $posted["cpf"];
 				$phone = "+" . preg_replace( "/\D/", "", $posted["phone"] );
 
-				$index = $response["tokenInfo"]["index"];
+				$tkInd = $response["tokenInfo"]["index"];
 
 				$data  = [
-					"uid"         => $uid,
 					"orderId"     => $order->ID,
 					"totalAmount" => $total, // em centavos
 					"description" => $desc,
-					"tokenIndex"  => $index,
+					"tokenIndex"  => $tkInd,
 					"name"        => $name,
 					"document"    => $doc,
 					"phone"       => $phone,
 				];
 
-				$response = $this->do_payment( $data );
+				// EXECUTANDO PAGAMENTO
+				$response = $this->do_payment( $data, $posted["token"] );
+				$response["paymentInfo"]["token"] = $tkInd;
 			}
 			else
 			{
+				// TESTE GRATUITO
 				$response = [
 					"success"     => true,
 					"paymentInfo" => [
@@ -423,11 +407,15 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 				];
 			}
 
+			// FALHA NO PAGAMENTO
 			if ( ! $response["success"] )
 			{
 				$error = "Ocorreu um erro ao processar seu pagamento, tente novamente.";
 
 				$this->log( "ERROR - do_payment : " . json_encode( [ $error, $response, $data ] ) );
+
+				// excluir card_token criado
+				// criar api pra isso
 
 				return [
 					"success" => false,
@@ -435,7 +423,10 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 				];
 			}
 
-			$this->log( "INFO - do_payment : " . json_encode( $response ) );
+			// $this->log( "INFO - do_payment : " . json_encode( $response ) );
+
+			$subscription->set_requires_manual_renewal( false );
+			$subscription->save();
 
 			return [
 				"success" => true,
