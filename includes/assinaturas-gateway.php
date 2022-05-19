@@ -111,16 +111,20 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	public function init_actions()
 	{
 		add_action( "wp_enqueue_scripts",                                       [ $this, "checkout_scripts"      ] );
-		add_action( "woocommerce_update_options_payment_gateways_" . $this->id, [ $this, "process_admin_options" ] );
 		add_filter( "woocommerce_credit_card_form_fields",                      [ $this, "filter_cc_fields"      ], 10, 2 );
 
-		// add_action( "woocommerce_scheduled_subscription_payment_"              . $this->id, [ $this, "scheduled_subscription_payment"                    ], 10, 2 );
-		// add_action( "woocommerce_subscription_failing_payment_method_updated_" . $this->id, [ $this, "update_failing_payment_method"                     ], 10, 2 );
+		add_action( "woocommerce_scheduled_subscription_payment",               [ $this, "scheduled_subscription_payment_2" ], 10, 2 );
+		add_action( "woocommerce_scheduled_subscription_payment_"  . $this->id, [ $this, "scheduled_subscription_payment"   ], 10, 2 );
+
+		add_action( "woocommerce_update_options_payment_gateways_" . $this->id, [ $this, "process_admin_options" ] );
+
+		add_action( "woocommerce_subscription_failing_payment_method_updated_" . $this->id, [ $this, "update_failing_payment_method"                     ], 10, 2 );
+		add_filter( "woocommerce_can_subscription_be_updated_to_new-payment-method",        [ $this, "can_subscription_be_updated_to_new_payment_method" ], 20, 2 );
+		add_filter( "woocommerce_subscriptions_update_payment_via_pay_shortcode",           [ $this, "can_update_all_subscriptions"                      ], 20, 3 );
+
 		// add_filter( "woocommerce_subscription_payment_meta",                                [ $this, "add_subscription_payment_meta"                     ], 10, 2 );
 		// add_filter( "woocommerce_subscription_validate_payment_meta",                       [ $this, "validate_subscription_payment_meta"                ], 10, 2 );
-		// add_action( "woocommerce_subscription_status_updated",                              [ $this, "subscription_status_changed"                       ], 10, 3 );
-		// add_filter( "woocommerce_can_subscription_be_updated_to_new-payment-method",        [ $this, "can_subscription_be_updated_to_new_payment_method" ], 20, 2 );
-		// add_filter( "woocommerce_subscriptions_update_payment_via_pay_shortcode",           [ $this, "can_update_all_subscriptions"                      ], 20, 3 );
+		// add_action( "woocommerce_subscription_status_updated",                              [ $this, "subscription_status_changed_NO_PAGSEGURO"          ], 10, 3 );
 	}
 
 	/**
