@@ -30,11 +30,6 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	 */
 	protected $gateway;
 
-	protected $token      = null;
-	protected $date_token = null;
-
-	protected $uid        = null;
-
 	public function __construct( $gateway = null )
 	{
 		$this->gateway = $gateway;
@@ -55,7 +50,11 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 					"cardNumber" => [
 						"required" => true,
 						"type"     => "string",
-					]
+					],
+					"user_id"       => [
+						"required" => true,
+						"type"     => "string",
+					],
 				],
 			]
 		);
