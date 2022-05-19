@@ -227,28 +227,6 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	}
 
 	/**
-	 * Get uid Triibo
-	 *
-	 * @param string $phone
-	 * @return array
-	 */
-	private function get_uid_triibo( $phone )
-	{
-		$this->renew_token();
-
-		$phone       = "+" . preg_replace( "/\D/", "", $phone );
-		$params      = [ "phones" => [ $phone ] ];
-
-		$resp        = $this->exec( "users/findUIDsByPhones", $params );
-
-		$resp["uid"] = $resp["usersUid"][$phone];
-
-		unset( $resp["usersUid"] );
-
-		return $resp;
-	}
-
-	/**
 	 * Tokeniza um cartão
 	 *
 	 * @param array $data
