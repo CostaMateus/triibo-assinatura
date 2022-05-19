@@ -530,6 +530,143 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 		return;
 	}
 
+	/**
+	 * Process the renewal payment.
+	 *
+	 * @param $renewal_total float The amount to charge.
+	 * @param $renewal_order WC_Order A WC_Order object created to record the renewal payment.
+	 *
+	 * @return void
+	 */
+	public function scheduled_subscription_payment( $renewal_total, $renewal_order )
+	{
+		$message  = "CALLED scheduled_subscription_payment(). ORDER: " . $renewal_order->get_id();
+		$this->log( $message );
+
+		$response = $this->process_subscription_renewal_payment( $renewal_total, $renewal_order );
+
+		if ( is_wp_error( $response ) )
+		{
+			$renewal_order->update_status( "failed", sprintf( __( "Triibo Assinatura, Transaction Failed (%s)", "triibo_assinaturas" ), $response->get_error_message() ) );
+		}
+
+		return;
+	}
+
+	public function scheduled_subscription_payment_2( $subscription_id)
+	{
+		$message  = "CALLED scheduled_subscription_payment_2(). ORDER: " . $subscription_id;
+		if ( $this->debug == "yes" ) $this->log->add( $this->id, $message );
+
+		return;
+	}
+
+	/**
+	 * Process the renewal payment function for initial and recurrent payments.
+	 *
+	 * @param $amount float The amount to charge.
+	 * @param $order WC_Order A WC_Order object created to record the renewal payment.
+	 *
+	 * @return void
+	 */
+	public function process_subscription_renewal_payment( $amount, $order )
+	{
+		$this->log( "CALLED scheduled_subscription_payment(). AMOUNT: $amount" );
+
+		// if ( $amount <= 0 )
+		// {
+		// 	$this->log( "process_subscription_renewal_payment(): o total mínimo permitido do pedido é 0,01 para usar este método de pagamento." );
+
+		// 	return new WP_Error( "triibo_assinatura_error", __( "O total mínimo permitido do pedido é 0,01 para usar este método de pagamento.", "triibo_assinaturas" ) );
+		// }
+
+		// $token = get_post_meta( $order->get_id(), "_triibo_assinatura_payment_token", true);
+
+		// if ( ! $token || $token == "" )
+		// {
+		// 	$this->log( "process_subscription_payment(): Subscription on Pagseguro not found" );
+
+		// 	return new WP_Error( "triibo_assinatura_error", __( "Subscription on Pagseguro not found", "triibo_assinaturas" ) );
+		// }
+
+		// $response = $this->api->make_subscription_payment( $assinatura, $order );
+
+		// // $response["transactionCode"] = "TESTING";
+
+		// if( isset( $response["transactionCode"]) ) {
+
+		// 	return $this->save_transaction_code( $order, $response["transactionCode"] );
+
+		// }
+
+		// $this->log( "process_subscription_payment(): Error trying to make payment for order: " . $order->get_id() );
+
+		// return new WP_Error( "triibo_assinatura_error", __( "Error trying to make payment for order", "triibo_assinaturas" ) );
+
+	}
+
+	/**
+	 * Update the _pagseguro_assinatura for a subscription after using Pagseguro Recorrente to complete a payment to make up for.
+	 * an automatic renewal payment which previously failed.
+	 *
+	 * @param WC_Subscription $subscription The subscription for which the failing payment method relates.
+	 * @param WC_Order        $renewal_order The order which recorded the successful payment (to make up for the failed automatic payment).
+	 */
+	public function update_failing_payment_method( $subscription, $renewal_order )
+	{
+		$id = get_post_meta( $renewal_order->get_id(), "_triibo_assinatura_payment_id",    true );
+		$tk = get_post_meta( $renewal_order->get_id(), "_triibo_assinatura_payment_token", true );
+
+		$sid = $subscription->get_id();
+
+		$this->log( "update_failing_payment_method(): SUB - $sid | id - $id | tk - $tk" );
+
+		update_post_meta( $sid, "_triibo_assinatura_payment_id",    $id );
+		update_post_meta( $sid, "_triibo_assinatura_payment_token", $tk );
+	}
+
+	/**
+	 *
+	 * For the recurring payment method to be changeable, the subscription must be active, have future (automatic) payments
+	 * and use a payment gateway which allows the subscription to be cancelled.
+	 *
+	 * @param bool            $subscription_can_be_changed Flag of whether the subscription can be changed.
+	 * @param WC_Subscription $subscription The subscription to check.
+	 * @return bool Flag indicating whether the subscription payment method can be updated.
+	 */
+	function can_subscription_be_updated_to_new_payment_method( $subscription_can_be_changed, $subscription )
+	{
+		if ( $this->id == $subscription->get_payment_method() )
+		{
+			if ( $subscription->has_status( [ "active", "on-hold" ] ) ) return true;
+		}
+
+		return $subscription_can_be_changed;
+	}
+
+	/**
+	 *
+	 * Return false because pagseguro does not support multiple subscriptions
+	 *
+	 * @param bool            $subscription_can_be_changed Flag of whether the subscription can be changed.
+	 * @param string $gateway_id The gateway id.
+	 * @param WC_Subscription $subscription The subscription to check.
+	 * @return bool Flag indicating whether the other subscriptions can be updated.
+	 */
+	function can_update_all_subscriptions( $can_update, $gateway_id, $subscription )
+	{
+		if ( $this->id == $gateway_id ) return false;
+
+		return $can_update;
+	}
+
+
+
+	private function log( $message )
+	{
+		if ( $this->debug == "yes" ) $this->log->add( $this->id, $message );
+	}
+
 	// /**
 	//  * process_subscription_payment function for initial and recurrent payments.
 	//  *
@@ -600,28 +737,6 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	// 	return;
 	// }
 
-	// /**
-	//  * scheduled_subscription_payment function.
-	//  *
-	//  * @param $amount_to_charge float The amount to charge.
-	//  * @param $renewal_order WC_Order A WC_Order object created to record the renewal payment.
-	//  * @access public
-	//  * @return void
-	//  */
-	// public function scheduled_subscription_payment( $amount_to_charge, $renewal_order ) {
-
-	// 	if ( "yes" === $this->debug ) {
-	// 		$this->log->add( $this->id, "called scheduled_subscription_payment(). Order: " . $renewal_order->get_id() );
-	// 	}
-
-	// 	$response = $this->process_subscription_payment( $renewal_order, $amount_to_charge );
-
-	// 	if ( is_wp_error( $response ) ) {
-	// 		$renewal_order->update_status( "failed", sprintf( __( "Pagseguro Transaction Failed (%s)", "triibo_assinaturas" ), $response->get_error_message() ) );
-	// 	}
-
-	// 	return;
-	// }
 
 	// /*
 	//  * Change status of assinatura no pagseguro
