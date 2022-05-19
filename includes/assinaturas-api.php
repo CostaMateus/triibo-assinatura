@@ -85,6 +85,32 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	}
 
 	/**
+	 * Consulta gateway para gerar token para uso nas chamadas das APIs
+	 *
+	 * @return void
+	 */
+	public function generate_token( $uid, $user_id )
+	{
+		$resp = $this->exec( "auth", "uid: $uid" );
+
+		$this->log( json_encode( [ $uid, $user_id, $resp ] ) );
+
+		if ( $resp["success"] )
+		{
+			$token    = $resp["token"];
+			$validity = ( new DateTime() )->format( "Y-m-d H:i:s" );
+
+			update_user_meta( $user_id, "_triibo_auth_token",    $token    );
+			update_user_meta( $user_id, "_triibo_auth_validity", $validity );
+		}
+		else
+		{
+			$this->log( "generate_token(): " . json_encode( $resp ) );
+			$this->generate_token( $uid, $user_id );
+		}
+	}
+
+	/**
 	 * Executa as chamadas
 	 *
 	 * @param string $api 		Rota da api a ser chamada
@@ -140,55 +166,6 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 
 		return json_decode( $resp, TRUE );
     }
-
-	/**
-	 * Consulta gateway para gerar token para uso nas chamadas das APIs
-	 *
-	 * @return void
-	 */
-	private function generate_token( $uid = null )
-	{
-		$user = ( $this->gateway->homol == "yes" )
-				? base64_encode( $this->gateway->homol_account . ":" . $this->gateway->homol_password )
-				: base64_encode( $this->gateway->account       . ":" . $this->gateway->password       );
-
-		$curl = curl_init();
-
-		curl_setopt_array($curl, [
-			CURLOPT_URL            => $this->get_api_url() . "/auth",
-			CURLOPT_RETURNTRANSFER => TRUE,
-			CURLOPT_ENCODING       => "",
-			CURLOPT_MAXREDIRS      => 10,
-			CURLOPT_TIMEOUT        => 60,
-			CURLOPT_SSL_VERIFYPEER => FALSE,
-			CURLOPT_FOLLOWLOCATION => TRUE,
-			CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
-			CURLOPT_CUSTOMREQUEST  => "POST",
-			CURLOPT_HTTPHEADER     => [
-				"Origin: " . $this->get_url(),
-				"Authorization: Basic $user",
-				( $uid ) ? "uid: $uid" : "",
-			],
-		]);
-
-		$resp = curl_exec( $curl );
-
-		curl_close( $curl );
-
-		$resp = json_decode( $resp, TRUE );
-
-		if ( $resp["success"] )
-		{
-			$this->token      = $resp["token"];
-			$this->date_token = new DateTime();
-			return;
-		}
-		else
-		{
-			$this->generate_token( $uid );
-			return;
-		}
-	}
 
 	/**
 	 * Renova token causo expirado
