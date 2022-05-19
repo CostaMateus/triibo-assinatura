@@ -198,7 +198,7 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 			$link      = esc_url( admin_url( $admin_url ) );
 			$text      = __( "System Status &gt; Logs", "triibo_assinaturas" );
 
-			return "<a href='$link' >$text</a>";
+			return "<a href='$link' target='_blank' >$text</a>";
 		}
 
 		$esc_attr = esc_attr( $this->id );
