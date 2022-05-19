@@ -84,7 +84,7 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 			$this->service           = $this->get_option( "service"          );
 			$this->debug             = $this->get_option( "debug"            );
 
-			$this->cc_hide_cpf_field = apply_filters('triibo_assinaturas_hide_cpf_field',       false);
+			$this->cc_hide_cpf_field = apply_filters('triibo_assinaturas_hide_cpf_field', false);
 
 			// Active logs.
 			if ( $this->debug == "yes" )
@@ -433,11 +433,14 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	{
         $user      = wp_get_current_user();
 
-		$triibo_id = get_user_meta( $user->ID, "triiboId_phone", true );
+		$triibo_id = get_user_meta( $user->ID, "triiboId_phone",     true );
+		$token     = get_user_meta( $user->ID, "_triibo_auth_token", true );
 
 		$order     = wc_get_order( $order_id );
 
 		$cardInfo  = [
+			"token"       => $token,
+
 			"holder"      => WC()->checkout()->get_value( "triibo_assinaturas-holder"      ),
 			"cpf"         => WC()->checkout()->get_value( "triibo_assinaturas-h_cpf"       ),
 			"phone"       => $triibo_id,
@@ -462,7 +465,7 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 		}
 		else
 		{
-			$order->update_status("on-hold", __( "Aguardando pagamento", "triibo_assinaturas" ));
+			$order->update_status( "on-hold", __( "Aguardando pagamento", "triibo_assinaturas" ) );
 
 			$this->finalize_order( $order, $response["data"] );
 
