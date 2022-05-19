@@ -84,16 +84,41 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 		return "https://api" . $env . ".triibo.com.br";
 	}
 
-	private function exec($api, $params = null)
+	/**
+	 * Executa as chamadas
+	 *
+	 * @param string $api 		Rota da api a ser chamada
+	 * @param string $token     Token do usuario
+	 * @param array $params		Dados a serem enviados no body
+	 * @return array
+	 */
+	private function exec($api, $token, $params = null )
     {
-        $curl   = curl_init();
+		$this->log( "EXEC - $api" );
+
+		$curl   = curl_init();
 
 		$url    = $this->get_api_url() . "/$api";
+		$origin = $this->get_url();
+
 		$header = [
-			"Origin: " . $this->get_url(),
-			"Authorization: Bearer " . $this->token,
+			"Origin: $origin",
 			"Content-type: application/json",
 		];
+
+		if ( $api === "auth" )
+		{
+			$api_user = ( $this->gateway->homol == "yes" )
+					? base64_encode( $this->gateway->homol_account . ":" . $this->gateway->homol_password )
+					: base64_encode( $this->gateway->account       . ":" . $this->gateway->password       );
+
+			array_push( $header, "Authorization: Basic $api_user" );
+			array_push( $header, $token );
+		}
+		else
+		{
+			array_push( $header, "Authorization: Bearer $token" );
+		}
 
 		curl_setopt_array( $curl, [
 			CURLOPT_URL            => $url,
