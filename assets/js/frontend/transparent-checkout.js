@@ -185,6 +185,9 @@
                 $.ajax( {
                     url  : `${wc_triibo_assinaturas_params.base_url}/brand/${cardNumber}`,
                     type : "GET",
+                    data : {
+                        user_id : wc_triibo_assinaturas_params.user_id,
+                    },
                     success: function( data ) {
                         if ( data.success )
                         {
