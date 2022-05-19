@@ -667,53 +667,6 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 		if ( $this->debug == "yes" ) $this->log->add( $this->id, $message );
 	}
 
-	// /**
-	//  * process_subscription_payment function for initial and recurrent payments.
-	//  *
-	//  * @access public
-	//  * @param mixed $order
-	//  * @param int $amount (default: 0)
-	//  */
-	// public function process_subscription_payment( $order, $amount = 0 ) {
-
-	// 	if ( $amount <= 0 ) {
-
-	// 		if ( "yes" === $this->debug ) {
-	// 			$this->log->add( $this->id, "process_subscription_payment(): Sorry, the minimum allowed order total is 0.01 to use this payment method. Amount: " . $amount );
-	// 		}
-
-	// 		return new WP_Error( "pagseguro_error", __( "Sorry, the minimum allowed order total is 0.01 to use this payment method.", "triibo_assinaturas" ) );
-	// 	}
-
-	// 	$assinatura = get_post_meta( $order->get_id(), "_pagseguro_assinatura", true);
-	// 	// Or fail :(
-	// 	if ( ! $assinatura || "" == $assinatura ) {
-
-	// 		if ( "yes" === $this->debug ) {
-	// 			$this->log->add( $this->id, "process_subscription_payment(): Subscription on Pagseguro not found" );
-	// 		}
-
-	// 		return new WP_Error( "pagseguro_error", __( "Subscription on Pagseguro not found", "triibo_assinaturas" ) );
-	// 	}
-
-	// 	$response = $this->api->make_subscription_payment( $assinatura, $order );
-
-	// 	// $response["transactionCode"] = "TESTING";
-
-	// 	if( isset( $response["transactionCode"]) ) {
-
-	// 		return $this->save_transaction_code( $order, $response["transactionCode"] );
-
-	// 	}
-
-	// 	if ( "yes" === $this->debug ) {
-	// 		$this->log->add( $this->id, "process_subscription_payment(): Error trying to make payment for order: " . $order->get_id() );
-	// 	}
-
-	// 	return new WP_Error( "pagseguro_error", __( "Error trying to make payment for order", "triibo_assinaturas" ) );
-
-	// }
-
 
 	// /**
 	//  * Process initial payment, after receiving notification of validation transaction
@@ -735,37 +688,6 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	// 	}
 
 	// 	return;
-	// }
-
-
-	// /*
-	//  * Change status of assinatura no pagseguro
-	//  *
-	// */
-	// function subscription_status_changed( $order, $new_status, $old_status ) {
-
-	// 	if( $new_status != "cancelled")
-	// 		return;
-
-	// 	$order_id = method_exists( $order, "get_id" ) ? $order->get_id() : $order->id;
-
-	// 	$assinatura = get_post_meta( $order_id, "_pagseguro_assinatura", true);
-
-	// 	if( $assinatura != "") {
-
-	// 		// $response = $this->api->pagseguro_update_subscription_status( $assinatura, $order_id );
-	// 		$response = $this->api->pagseguro_cancel_subscription( $assinatura, $order_id );
-
-	// 		if( $response == true ) {
-
-	// 			$order->add_order_note( sprintf( __( "PagSeguro: Subscription Cancelled (%s).", "triibo_assinaturas" ), $assinatura ) );
-
-	// 		} else {
-
-	// 			$order->add_order_note( sprintf( __( "PagSeguro: Problem Cancelling Subscription (%s).", "triibo_assinaturas" ), $assinatura ) );
-
-	// 		}
-	// 	}
 	// }
 
 
@@ -1298,56 +1220,4 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	// 	return;
 
 	// }
-
-
-	// /**
-	//  * Update the _pagseguro_assinatura for a subscription after using Pagseguro Recorrente to complete a payment to make up for.
-	//  * an automatic renewal payment which previously failed.
-	//  *
-	//  * @param WC_Subscription $subscription The subscription for which the failing payment method relates.
-	//  * @param WC_Order        $renewal_order The order which recorded the successful payment (to make up for the failed automatic payment).
-	//  */
-	// public function update_failing_payment_method( $subscription, $renewal_order ) {
-	// 	update_post_meta( $subscription->get_id(), "_pagseguro_assinatura", get_post_meta( $renewal_order->get_id(), "_pagseguro_assinatura", true ) );
-	// 	update_post_meta( $subscription->get_id(), "_pagseguro_tracker", get_post_meta( $renewal_order->get_id(), "_pagseguro_tracker", true ) );
-	// }
-
-
-	// /**
-	//  *
-	//  * For the recurring payment method to be changeable, the subscription must be active, have future (automatic) payments
-	//  * and use a payment gateway which allows the subscription to be cancelled.
-	//  *
-	//  * @param bool            $subscription_can_be_changed Flag of whether the subscription can be changed.
-	//  * @param WC_Subscription $subscription The subscription to check.
-	//  * @return bool Flag indicating whether the subscription payment method can be updated.
-	//  */
-	// function can_subscription_be_updated_to_new_payment_method($subscription_can_be_changed, $subscription) {
-
-	// 	if( $this->id == $subscription->get_payment_method() ) {
-
-	// 		if( $subscription->has_status( array( "active", "on-hold" ) ) ) {
-	// 			return true;
-	// 		}
-	// 	}
-
-	// 	return $subscription_can_be_changed;
-	// }
-
-	// /**
-	//  *
-	//  * Return false because pagseguro does not support multiple subscriptions
-	//  *
-	//  * @param bool            $subscription_can_be_changed Flag of whether the subscription can be changed.
-	//  * @param string $gateway_id The gateway id.
-	//  * @param WC_Subscription $subscription The subscription to check.
-	//  * @return bool Flag indicating whether the other subscriptions can be updated.
-	//  */
-	// function can_update_all_subscriptions( $can_update, $gateway_id, $subscription ) {
-	// 	if( $this->id == $gateway_id ) {
-	// 		return false;
-	// 	}
-	// 	return $can_update;
-	// }
-
 }
