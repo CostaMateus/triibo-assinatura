@@ -209,7 +209,8 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	 */
 	public function get_brand( $data )
 	{
-		$this->renew_token();
+		$user_id  = $data["user_id"];
+		$token    = $this->validate_token( $user_id );
 
 		$params   = [
 			"payload" => [
@@ -218,7 +219,7 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 			]
 		];
 
-		$response = $this->exec("payments/brand", $params);
+		$response = $this->exec("payments/brand", $token, $params );
 
 		// $params["payload"]["cardNumber"] = "****-****-****-" . substr( $data["cardNumber"], -4 );
 		// $this->log( "INFO - get_brand : " . json_encode( [ $params, $response ] ) );
