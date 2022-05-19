@@ -233,10 +233,8 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	 * @param array $data
 	 * @return array
 	 */
-	private function create_card_token( $data )
+	private function create_card_token( $data, $token )
 	{
-		$this->renew_token( $data["uid"] );
-
 		$params = [
 			"payload" => [
 				"gateway"  => $this->gateway->service,
@@ -250,7 +248,7 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 			]
 		];
 
-		return $this->exec( "payments/createToken", $params );
+		return $this->exec( "payments/createToken", $token, $params );
 	}
 
 	/**
@@ -259,10 +257,8 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	 * @param array $data
 	 * @return array
 	 */
-	private function do_payment( $data )
+	private function do_payment( $data, $token )
 	{
-		$this->renew_token( $data["uid"] );
-
 		$params = [
 			"payload" => [
 				"gateway" => $this->gateway->service,
@@ -278,7 +274,7 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 			]
 		];
 
-		return $this->exec( "payments/doPayment", $params );
+		return $this->exec( "payments/doPayment", $token, $params );
 	}
 
 	/**
