@@ -323,12 +323,18 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 		wp_enqueue_style(  "triibo_assinaturas_checkout", plugins_url( "assets/css/frontend/transparent-checkout.css", plugin_dir_path( __FILE__ ) ), [],                                                                          WC_Triibo_Assinaturas::VERSION       );
 		wp_enqueue_script( "triibo_assinaturas_checkout", plugins_url( "assets/js/frontend/transparent-checkout.js",   plugin_dir_path( __FILE__ ) ), [ "json2", "jquery", "woocommerce-extra-checkout-fields-for-brazil-front" ], WC_Triibo_Assinaturas::VERSION, true );
 
+        $user = wp_get_current_user();
+		// $uid  = get_user_meta( $user->ID, "_triibo_id", true );
+		// $this->log->add( $this->id, "called on checkout_scripts" );
+		$this->api->validate_token( $user->ID );
+
 		$url = ( $this->mkt_homol === "yes" ) ? "https://dev-marketplace.triibo.com.br/wp-json/triibo_assinaturas/v1" : "https://marketplace.triibo.com.br/wp-json/triibo_assinaturas/v1";
 
 		wp_localize_script(
 			"triibo_assinaturas_checkout",
 			"wc_triibo_assinaturas_params",
 			[
+				"user_id"  => $user->ID,
 				"base_url" => $url,
 				"messages" => [
 					"session_error"      => __( "Ocorreu um error. Por favor, atualize a página.",                       "triibo_assinaturas" ),
