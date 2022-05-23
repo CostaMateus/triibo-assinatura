@@ -252,6 +252,44 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	}
 
 	/**
+	 * Verifica se cartão já foi tokenizado
+	 *
+	 * @param string $cardNumber
+	 * @param string $token
+	 * @return array
+	 */
+	private function check_card_token( $cardNumber, $token )
+	{
+		$params = [
+			"payload" => [
+				"gateway"    => $this->gateway->service,
+				"cardNumber" => $cardNumber,
+			]
+		];
+
+		return $this->exec( "payments/checkToken", $token, $params );
+	}
+
+	/**
+	 * Exclui um cartão tokenizado
+	 *
+	 * @param string $tokenIndex
+	 * @param string $token
+	 * @return array
+	 */
+	private function delete_card_token( $tokenIndex, $token )
+	{
+		$params = [
+			"payload" => [
+				"gateway"  => $this->gateway->service,
+				"tokenIndex" => $tokenIndex
+			]
+		];
+
+		return $this->exec( "payments/deleteToken", $token, $params );
+	}
+
+	/**
 	 * Processa pagamento
 	 *
 	 * @param array $data
