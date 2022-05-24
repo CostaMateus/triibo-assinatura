@@ -290,6 +290,61 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	}
 
 	/**
+	 * Valida dados do cartão.
+	 * Retorna token do cartão, se não tiver, tokeniza.
+	 *
+	 * @param array $posted
+	 * @return array
+	 */
+	private function status_card( $posted )
+	{
+		$number   = substr($posted["card_number"], -4);
+		$response = $this->check_card_token($number, $posted["token"]);
+
+		// CARTAO NAO TOKENIZADO
+		if ( ! $response["success"] )
+		{
+			$data     = [
+				"holder"         => $posted["holder"],
+				"cardNumber"     => $posted["card_number"],
+				"expirationDate" => $posted["month"] . "/" . $posted["year"],
+				"securityCode"   => $posted["cvc"],
+				"brand"          => $posted["brand"],
+			];
+
+			// CRIANDO TOKEN DO CARTAO
+			$response = $this->create_card_token( $data, $posted["token"] );
+
+			// FALHA NA CRIACAO DO TOKEN DO CARTAO
+			if ( ! $response["success"] )
+			{
+				$error = "Falha ao consultar token.";
+				$this->log( "ERROR - create_card_token : " . json_encode( [ $error, $response ] ) );
+
+				return [
+					"success" => false,
+					"error"   => "2. $error"
+				];
+			}
+
+			$created    = true;
+			$tokenIndex = $response["tokenInfo"]["index"];
+		}
+		// CARTAO JA TOKENIZADO
+		else
+		{
+			$created    = false;
+			$tokenIndex = $response["tokenInfo"]["index"];
+		}
+
+		return [
+			"success"    => true,
+			"cretead"    => $created,
+			"tokenIndex" => $tokenIndex,
+		];
+	}
+
+	/**
 	 * Processa pagamento
 	 *
 	 * @param array $data
@@ -382,30 +437,11 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 
 		if ( $order_contains_failed_renewal || ! empty( $subscription ) )
 		{
-			$data     = [
-				"holder"         => $posted["holder"],
-				"cardNumber"     => $posted["card_number"],
-				"expirationDate" => $posted["month"] . "/" . $posted["year"],
-				"securityCode"   => $posted["cvc"],
-				"brand"          => $posted["brand"],
-			];
+			$status_card = $this->status_card( $posted );
 
-			// CRIANDO TOKEN DO CARTÃO
-			$response = $this->create_card_token( $data, $posted["token"] );
+			if ( ! $status_card["success"] ) return $status_card;
 
-			// FALHA NA CRIAÇÃO DO TOKEN DO CARTÃo
-			if ( ! $response["success"] )
-			{
-				$error = "Falha ao consultar token.";
-
-				$this->log( "ERROR - create_card_token : " . json_encode( [ $error, $response ] ) );
-
-				return [
-					"success" => false,
-					"error"   => "2. $error"
-				];
-			}
-
+			// PROCESSAMENTO DO PAGAMENTO
 			if ( $order->get_total() > 0 )
 			{
 				$item  = current( $order->get_items() );
@@ -416,13 +452,11 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 				$doc   = $order->get_meta( "_billing_cpf", true )  ?: $posted["cpf"];
 				$phone = "+" . preg_replace( "/\D/", "", $posted["phone"] );
 
-				$tkInd = $response["tokenInfo"]["index"];
-
 				$data  = [
 					"orderId"     => $order->ID,
 					"totalAmount" => $total, // em centavos
 					"description" => $desc,
-					"tokenIndex"  => $tkInd,
+					"tokenIndex"  => $status_card["tokenIndex"],
 					"name"        => $name,
 					"document"    => $doc,
 					"phone"       => $phone,
@@ -430,7 +464,7 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 
 				// EXECUTANDO PAGAMENTO
 				$response = $this->do_payment( $data, $posted["token"] );
-				$response["paymentInfo"]["token"] = $tkInd;
+				$response["paymentInfo"]["token"] = $status_card["tokenIndex"];
 			}
 			else
 			{
@@ -449,19 +483,20 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 			if ( ! $response["success"] )
 			{
 				$error = "Ocorreu um erro ao processar seu pagamento, tente novamente.";
-
 				$this->log( "ERROR - do_payment : " . json_encode( [ $error, $response, $data ] ) );
 
-				// excluir card_token criado
-				// criar api pra isso
+				// SE TOKEN DO CARTAO FOI CRIADO NESSE MOMENTO, EXCLUI
+				if ($status_card["created"])
+				{
+					$response = $this->delete_card_token($status_card["tokenIndex"], $posted["token"]);
+					$this->log( "WARNING - delete_card_token : " . json_encode( [ $response ] ) );
+				}
 
 				return [
 					"success" => false,
 					"error"   => "3. $error"
 				];
 			}
-
-			// $this->log( "INFO - do_payment : " . json_encode( $response ) );
 
 			$subscription->set_requires_manual_renewal( false );
 			$subscription->save();
