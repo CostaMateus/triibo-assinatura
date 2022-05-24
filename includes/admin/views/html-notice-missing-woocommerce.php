@@ -11,7 +11,8 @@ $is_installed = false;
 if ( function_exists( "get_plugins" ) )
 {
 	$all_plugins  = get_plugins();
-	$is_installed = ! empty( $all_plugins["woocommerce-subscriptions/woocommerce-subscriptions.php"] );
+	$key          = "woocommerce-subscriptions/woocommerce-subscriptions.php";
+	$is_installed = array_key_exists($key, $all_plugins);
 }
 ?>
 
