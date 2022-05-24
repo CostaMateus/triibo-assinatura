@@ -352,6 +352,10 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	 */
 	private function do_payment( $data, $token )
 	{
+		// numero de teste
+		// 4929 7008 9247 1744
+		// 4024 0071 2681 6130
+
 		$params = [
 			"payload" => [
 				"gateway" => $this->gateway->service,
@@ -386,36 +390,28 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 		// Payment method changes act on the subscription not the original order
 		if ( $is_payment_change )
 		{
-			// $subscription = wcs_get_subscription( wcs_get_objects_property( $order, "id" ) );
-			// $order        = $subscription->get_parent();
+			$subscription = wcs_get_subscription( wcs_get_objects_property( $order, "id" ) );
+			$order        = $subscription->get_parent();
 
-			// $current_user = wp_get_current_user();
-			// $plan         = get_post_meta( $subscription->get_id(), "_pagseguro_assinatura", true );
-			// $response     = $this->update_payment_method( $current_user, $plan, $posted, $subscription );
+			$status_card  = $this->status_card( $posted );
 
-			// if ( isset( $response["success"] ) )
-			// {
-			// 	return [
-			// 		"result"   => "success",
-			// 		"redirect" => get_permalink( get_option("woocommerce_myaccount_page_id") )
-			// 	];
+			if ( ! $status_card["success"] )
+			{
+				$this->log( "update_payment_method: SUBS " . $subscription->get_id() );
 
-			// }
-			// else
-			// {
-			// 	wc_add_notice( $response["error"][0], "error" );
+				return [
+					"success" => false,
+					"error"   => "4. Falha ao alterar método de pagamento. Tente novamente."
+				];
+			}
 
-			// 	$url = wp_nonce_url( add_query_arg( [ "change_payment_method" => $subscription->get_id() ], $subscription->get_checkout_payment_url() ) );
+			$paymentToken = get_post_meta( $subscription->get_id(), "_triibo_assinatura_payment_token", true );
 
-			// 	wc_add_notice( sprintf( __("Payment method update failed. <a href="%s">Try Again</a>", "triibo_assinaturas"), $url ), "error" );
-			// 	wp_redirect( $subscription->get_view_order_url() );
-			// 	exit;
-			// }
+			update_post_meta( $subscription->get_id(), "_triibo_assinatura_payment_token", $status_card["tokenIndex"] );
 
-			return [
-				"success" => false,
-				"error"   => "4. is_payment_change"
-			];
+			$this->log( "update_payment_method: SUB " . $subscription->get_id() . " | old ID " . $paymentToken . " | new ID " . $status_card["tokenIndex"] );
+
+			return [ "success" => true ];
 		}
 		else
 		{
