@@ -130,7 +130,7 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 			$now   = new DateTime();
 			$diff  = $now->diff( $dtval );
 
-			if ( $diff->h > 10 )
+			if ( $diff->d > 0 || $diff->h > 10 )
 			{
 				$this->log( "validate_token(): experied token $user_id" );
 				$this->generate_token( $uid, $user_id );
