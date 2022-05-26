@@ -49,7 +49,7 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 			$this->order_button_text  = __( "Prossiga para o pagamento",                                 "triibo_assinaturas" );
 
 			// Subscriptions
-			$this->supports = apply_filters("triibo_assinaturas_supports_array", [
+			$this->supports = apply_filters( "triibo_assinaturas_supports_array", [
 				"subscriptions",
 				"subscription_cancellation",
 				"subscription_suspension",
@@ -84,7 +84,7 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 			$this->service           = $this->get_option( "service"          );
 			$this->debug             = $this->get_option( "debug"            );
 
-			$this->cc_hide_cpf_field = apply_filters('triibo_assinaturas_hide_cpf_field', false);
+			$this->cc_hide_cpf_field = apply_filters( "triibo_assinaturas_hide_cpf_field", false );
 
 			// Active logs.
 			if ( $this->debug == "yes" )
@@ -110,13 +110,12 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 	public function init_actions()
 	{
-		add_action( "wp_enqueue_scripts",                                       [ $this, "checkout_scripts"      ] );
-		add_filter( "woocommerce_credit_card_form_fields",                      [ $this, "filter_cc_fields"      ], 10, 2 );
+		add_action( "wp_enqueue_scripts",                                                   [ $this, "checkout_scripts"                                  ]        );
+		add_filter( "woocommerce_credit_card_form_fields",                                  [ $this, "filter_cc_fields"                                  ], 10, 2 );
 
-		add_action( "woocommerce_scheduled_subscription_payment",               [ $this, "scheduled_subscription_payment_2" ], 10, 2 );
-		add_action( "woocommerce_scheduled_subscription_payment_"  . $this->id, [ $this, "scheduled_subscription_payment"   ], 10, 2 );
+		add_action( "woocommerce_scheduled_subscription_payment_"              . $this->id, [ $this, "scheduled_subscription_payment"                    ], 10, 2 );
 
-		add_action( "woocommerce_update_options_payment_gateways_" . $this->id, [ $this, "process_admin_options" ] );
+		add_action( "woocommerce_update_options_payment_gateways_"             . $this->id, [ $this, "process_admin_options"                             ]        );
 
 		add_action( "woocommerce_subscription_failing_payment_method_updated_" . $this->id, [ $this, "update_failing_payment_method"                     ], 10, 2 );
 		add_filter( "woocommerce_can_subscription_be_updated_to_new-payment-method",        [ $this, "can_subscription_be_updated_to_new_payment_method" ], 20, 2 );
@@ -368,7 +367,7 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 		{
 			$id = esc_attr( $this->id );
 
-			$is_update_payment_method = is_wc_endpoint_url("order-pay");
+			$is_update_payment_method = is_wc_endpoint_url( "order-pay" );
 
 			$fields["card-expiry-field"] =
 			"<p class='form-row form-row-first'>
@@ -463,7 +462,8 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 				"redirect" => ""
 			);
 		}
-		else
+
+		if ( ! isset( $response["payment_change"] ) || ! $response["payment_change"] )
 		{
 			$order->update_status( "on-hold", __( "Aguardando pagamento", "triibo_assinaturas" ) );
 
@@ -471,12 +471,12 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 			// Remove cart.
 			WC()->cart->empty_cart();
-
-			return [
-				"result"   => "success",
-				"redirect" => $this->get_return_url( $order ),
-			];
 		}
+
+		return [
+			"result"   => "success",
+			"redirect" => $this->get_return_url( $order ),
+		];
 	}
 
 	/**
@@ -533,77 +533,39 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	/**
 	 * Process the renewal payment.
 	 *
-	 * @param $renewal_total float The amount to charge.
-	 * @param $renewal_order WC_Order A WC_Order object created to record the renewal payment.
+	 * @param float 	$renewal_total 	The amount to charge.
+	 * @param WC_Order 	$renewal_order 	A WC_Order object created to record the renewal payment.
 	 *
 	 * @return void
 	 */
 	public function scheduled_subscription_payment( $renewal_total, $renewal_order )
 	{
-		$message  = "CALLED scheduled_subscription_payment(). ORDER: " . $renewal_order->get_id();
-		$this->log( $message );
+		$response = $this->api->do_subscription_renewal_payment( $renewal_order, $renewal_total );
 
-		$response = $this->process_subscription_renewal_payment( $renewal_total, $renewal_order );
-
-		if ( is_wp_error( $response ) )
+		if ( ! $response[ "success" ] )
 		{
-			$renewal_order->update_status( "failed", sprintf( __( "Triibo Assinatura, Transaction Failed (%s)", "triibo_assinaturas" ), $response->get_error_message() ) );
+			// ADD - nota de erro
+			// UPD - status do pedido
+
+			$this->log( "ERROR scheduled_subscription_payment(): order_id " . $renewal_order->ID . " | " . json_encode( $response ) );
+
+			// $subscription = wcs_get_subscription( wcs_get_objects_property( $renewal_order, "id" ) );
+			// $subscription->set_requires_manual_renewal( true );
+			// $subscription->save();
+
+			return;
 		}
 
-		return;
-	}
+		$renewal_order->update_status( "on-hold", __( "Aguardando pagamento", "triibo_assinaturas" ) );
 
-	public function scheduled_subscription_payment_2( $subscription_id)
-	{
-		$message  = "CALLED scheduled_subscription_payment_2(). ORDER: " . $subscription_id;
-		if ( $this->debug == "yes" ) $this->log->add( $this->id, $message );
+		$this->finalize_order( $renewal_order, $response["data"] );
+
+		$this->log( "scheduled_subscription_payment(): order_id " . $renewal_order->ID . " | " . json_encode( $response ) );
 
 		return;
 	}
 
-	/**
-	 * Process the renewal payment function for initial and recurrent payments.
-	 *
-	 * @param $amount float The amount to charge.
-	 * @param $order WC_Order A WC_Order object created to record the renewal payment.
-	 *
-	 * @return void
-	 */
-	public function process_subscription_renewal_payment( $amount, $order )
-	{
-		$this->log( "CALLED scheduled_subscription_payment(). AMOUNT: $amount" );
 
-		// if ( $amount <= 0 )
-		// {
-		// 	$this->log( "process_subscription_renewal_payment(): o total mínimo permitido do pedido é 0,01 para usar este método de pagamento." );
-
-		// 	return new WP_Error( "triibo_assinatura_error", __( "O total mínimo permitido do pedido é 0,01 para usar este método de pagamento.", "triibo_assinaturas" ) );
-		// }
-
-		// $token = get_post_meta( $order->get_id(), "_triibo_assinatura_payment_token", true);
-
-		// if ( ! $token || $token == "" )
-		// {
-		// 	$this->log( "process_subscription_payment(): Subscription on Pagseguro not found" );
-
-		// 	return new WP_Error( "triibo_assinatura_error", __( "Subscription on Pagseguro not found", "triibo_assinaturas" ) );
-		// }
-
-		// $response = $this->api->make_subscription_payment( $assinatura, $order );
-
-		// // $response["transactionCode"] = "TESTING";
-
-		// if( isset( $response["transactionCode"]) ) {
-
-		// 	return $this->save_transaction_code( $order, $response["transactionCode"] );
-
-		// }
-
-		// $this->log( "process_subscription_payment(): Error trying to make payment for order: " . $order->get_id() );
-
-		// return new WP_Error( "triibo_assinatura_error", __( "Error trying to make payment for order", "triibo_assinaturas" ) );
-
-	}
 
 	/**
 	 * Update the _pagseguro_assinatura for a subscription after using Pagseguro Recorrente to complete a payment to make up for.
@@ -668,11 +630,11 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	}
 
 
-	// /**
-	//  * Process initial payment, after receiving notification of validation transaction
-	//  *
-	//  * @param string $order WC_Order
-	//  */
+	/**
+	 * Process initial payment, after receiving notification of validation transaction
+	 *
+	 * @param string $order WC_Order
+	 */
 	// public function process_initial_payment( WC_Order $order ) {
 
 	// 	if(  wcs_order_contains_subscription( $order, array( "parent", "renewal" ) ) && "yes" != $order->get_meta("_pr_processing") ) {
@@ -691,11 +653,11 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	// }
 
 
-	// /**
-	//  * Update order status.
-	//  *
-	//  * @param array $posted PagSeguro post data.
-	//  */
+	/**
+	 * Update order status.
+	 *
+	 * @param array $posted PagSeguro post data.
+	 */
 	// public function update_order_status( $posted ) {
 	// 	if ( isset( $posted->reference ) ) {
 	// 		$id    = (int) str_replace( $this->invoice_prefix, "", $posted->reference );
@@ -838,11 +800,11 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	// 	return;
 	// }
 
-	// /**
-	//  * Update pre-approval status.
-	//  *
-	//  * @param array $posted PagSeguro post data.
-	//  */
+	/**
+	 * Update pre-approval status.
+	 *
+	 * @param array $posted PagSeguro post data.
+	 */
 	// public function update_preapproval_status( $posted ) {
 
 	// 	if ( isset( $posted->reference ) && isset( $posted->code ) ) {
@@ -952,26 +914,26 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	// }
 
 
-	// /**
-	//  * Send email notification.
-	//  *
-	//  * @param string $subject Email subject.
-	//  * @param string $title   Email title.
-	//  * @param string $message Email message.
-	//  */
+	/**
+	 * Send email notification.
+	 *
+	 * @param string $subject Email subject.
+	 * @param string $title   Email title.
+	 * @param string $message Email message.
+	 */
 	// protected function send_email( $subject, $title, $message ) {
 	// 	$mailer = WC()->mailer();
 
 	// 	$mailer->send( get_option( "admin_email" ), $subject, $mailer->wrap_message( $title, $message ) );
 	// }
 
-	// /**
-	//  * Get the Pagseguro plan for pre-approval of a customer
-	//  *
-	//  * @param string $period WooCommerce Subscriptions period
-	//  * @param int $interval WooCommerce Subscriptions interval
-	//  * @return string $plan Pagseguro Plan code for pre-approval of a customer
-	//  */
+	/**
+	 * Get the Pagseguro plan for pre-approval of a customer
+	 *
+	 * @param string $period WooCommerce Subscriptions period
+	 * @param int $interval WooCommerce Subscriptions interval
+	 * @return string $plan Pagseguro Plan code for pre-approval of a customer
+	 */
 	// public function get_pagseguro_plan( $period = "month", $interval = 1 ) {
 
 	// 	$plan = "";
@@ -1096,13 +1058,13 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 	// }
 
-	// /**
-	//  * Get the corresponding period identifier in Pagseguro.
-	//  *
-	//  * @param string $period WooCommerce Subscriptions period
-	//  * @param int $interval WooCommerce Subscriptions interval
-	//  * @return string
-	//  */
+	/**
+	 * Get the corresponding period identifier in Pagseguro.
+	 *
+	 * @param string $period WooCommerce Subscriptions period
+	 * @param int $interval WooCommerce Subscriptions interval
+	 * @return string
+	 */
 	// public function get_pagseguro_period( $period = "month", $interval = 1 ) {
 
 	// 	$interval = intval( $interval );
@@ -1133,12 +1095,12 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	// 	return strtoupper( $period );
 	// }
 
-	// /**
-	//  * Get label for Pagseguro period identifier
-	//  *
-	//  * @param string $pagseguro_period Pagseguro pediod identifier
-	//  * @return string
-	//  */
+	/**
+	 * Get label for Pagseguro period identifier
+	 *
+	 * @param string $pagseguro_period Pagseguro pediod identifier
+	 * @return string
+	 */
 	// public function get_pagseguro_period_label( $pagseguro_period = "MONTLHY" ) {
 	// 	// Register for translation purposes
 	// 	$array = array(
@@ -1157,14 +1119,14 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	// 	return $pagseguro_period;
 	// }
 
-	// /**
-	//  * Include the payment meta data required to process automatic recurring payments so that store managers can
-	//  * manually set up automatic recurring payments for a customer via the Edit Subscription screen in Subscriptions v2.0+.
-	//  *
-	//  * @param array $payment_meta associative array of meta data required for automatic payments
-	//  * @param WC_Subscription $subscription An instance of a subscription object
-	//  * @return array
-	//  */
+	/**
+	 * Include the payment meta data required to process automatic recurring payments so that store managers can
+	 * manually set up automatic recurring payments for a customer via the Edit Subscription screen in Subscriptions v2.0+.
+	 *
+	 * @param array $payment_meta associative array of meta data required for automatic payments
+	 * @param WC_Subscription $subscription An instance of a subscription object
+	 * @return array
+	 */
 	// public function add_subscription_payment_meta( $payment_meta, $subscription )
 	// {
  	// 	$payment_meta[ $this->id ] = array(
@@ -1179,14 +1141,14 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	// 	return $payment_meta;
 	// }
 
-	// /**
-	//  * Validate the payment meta data required to process automatic recurring payments so that store managers can.
-	//  * manually set up automatic recurring payments for a customer via the Edit Subscription screen in Subscriptions 2.0+.
-	//  *
-	//  * @param  string $payment_method_id The ID of the payment method to validate
-	//  * @param  array  $payment_meta associative array of meta data required for automatic payments
-	//  * @throws Exception
-	//  */
+	/**
+	 * Validate the payment meta data required to process automatic recurring payments so that store managers can.
+	 * manually set up automatic recurring payments for a customer via the Edit Subscription screen in Subscriptions 2.0+.
+	 *
+	 * @param  string $payment_method_id The ID of the payment method to validate
+	 * @param  array  $payment_meta associative array of meta data required for automatic payments
+	 * @throws Exception
+	 */
 	// public function validate_subscription_payment_meta( $payment_method_id, $payment_meta ) {
 	// 	if ( $this->id === $payment_method_id ) {
 	// 		if ( ! isset( $payment_meta["post_meta"]["_pagseguro_assinatura"]["value"] ) || empty( $payment_meta["post_meta"]["_pagseguro_assinatura"]["value"] ) ) {
@@ -1195,13 +1157,13 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	// 	}
 	// }
 
-	// /**
-	//  * Saves sender hash for later use.
-	//  *
-	//  * @param int $order_id
-	//  * @param string $hash Sender hash generated with Javascript on front end.
-	//  * @return null
-	//  */
+	/**
+	 * Saves sender hash for later use.
+	 *
+	 * @param int $order_id
+	 * @param string $hash Sender hash generated with Javascript on front end.
+	 * @return null
+	 */
 	// protected function save_sender_hash( $order_id, $hash ) {
 
 	// 	update_post_meta( $order_id, "_sender_hash", sanitize_text_field( $hash ) );
