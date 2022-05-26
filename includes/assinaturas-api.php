@@ -353,6 +353,7 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 		// numero de teste
 		// 4929 7008 9247 1744
 		// 4024 0071 2681 6130
+		// 4024 0071 1511 4562
 
 		$params = [
 			"payload" => [
@@ -389,8 +390,6 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 		if ( $is_payment_change )
 		{
 			$subscription = wcs_get_subscription( wcs_get_objects_property( $order, "id" ) );
-			$order        = $subscription->get_parent();
-
 			$status_card  = $this->status_card( $posted );
 
 			if ( ! $status_card[ "success" ] )
@@ -409,7 +408,10 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 
 			$this->log( "SUCCESS - update_payment_method: SUBS " . $subscription->get_id() . " | old ID " . $paymentToken . " | new ID " . $status_card[ "tokenIndex" ] );
 
-			return [ "success" => true ];
+			return [
+				"success"        => true,
+				"payment_change" => true,
+			];
 		}
 		else
 		{
@@ -508,6 +510,72 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 		return [
 			"success" => false,
 			"error"   => "<strong>Triibo Recorrente</strong>: " . __( "Ocorreu um erro ao processar seu pagamento, tente novamente. Ou entre em contato conosco para obter assistência.", "triibo_assinaturas" ),
+		];
+	}
+
+	/**
+	 * Process payment on a subscription renewal
+	 *
+	 * @param WC_Order $order Order data.
+	 * @param float    amount The amount to charge.
+	 *
+	 * @return string
+	 */
+	public function do_subscription_renewal_payment( $order, $amount )
+	{
+		$user_id      = $order->get_user_id();
+		$token        = $this->validate_token( $user_id );
+
+		$item         = current( $order->get_items() );
+		$desc         = $item->get_name();
+
+		$total        = intval( strval( $amount * 100 ) ); // em centavos
+		$name         = $order->get_user()->get( "display_name" );
+		$doc          = $order->get_meta( "_billing_cpf", true );
+		$phone        = get_user_meta( $user_id, "triiboId_phone", true );
+
+		if ( wcs_order_contains_subscription( $order->ID ) )
+			$subscriptions = wcs_get_subscriptions_for_order( $order->ID );
+		elseif ( wcs_order_contains_renewal( $order->ID ) )
+			$subscriptions = wcs_get_subscriptions_for_renewal_order( $order->ID );
+
+		$subscription = array_pop( $subscriptions );
+
+		$paymentToken = get_post_meta( $subscription->get_id(), "_triibo_assinatura_payment_token", true );
+
+		$data         = [
+			"orderId"     => $order->ID,
+			"totalAmount" => $total, // em centavos
+			"description" => $desc,
+			"tokenIndex"  => $paymentToken,
+			"name"        => $name,
+			"document"    => $doc,
+			"phone"       => $phone,
+		];
+
+		// EXECUTANDO PAGAMENTO
+		$response = $this->do_payment( $data, $token );
+		$response[ "paymentInfo" ][ "token" ] = $paymentToken;
+
+		// FALHA NO PAGAMENTO
+		if ( ! $response[ "success" ] )
+		{
+			$error = "Ocorreu um erro ao processar seu pagamento, tente novamente.";
+			$this->log( "ERROR - do_payment renewal : " . json_encode( [ $error, $response, $data ] ) );
+
+			return [
+				"success"    => false,
+				"error"      => "5. $error",
+				"full_error" => $response,
+
+				// talvez adicionar mais infos
+			];
+		}
+
+		return [
+			"success" => true,
+			"message" => "Pagamento processado com sucesso.",
+			"data"    => $response[ "paymentInfo" ]
 		];
 	}
 
