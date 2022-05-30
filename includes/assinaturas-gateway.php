@@ -465,8 +465,6 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 		if ( ! isset( $response["payment_change"] ) || ! $response["payment_change"] )
 		{
-			$order->update_status( "on-hold", __( "Aguardando pagamento", "triibo_assinaturas" ) );
-
 			$this->finalize_order( $order, $response["data"] );
 
 			// Remove cart.
@@ -490,7 +488,7 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 		if ( $data["id"] ) $this->save_triibo_payment_data( $order->get_id(), $data );
 
 		$order->payment_complete();
-		$order->update_status( "completed" );
+		$order->update_status( "processing" );
 
 		return;
 	}
@@ -544,23 +542,22 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 		if ( ! $response[ "success" ] )
 		{
-			// ADD - nota de erro
-			// UPD - status do pedido
-
 			$this->log( "ERROR scheduled_subscription_payment(): order_id " . $renewal_order->ID . " | " . json_encode( $response ) );
 
-			// $subscription = wcs_get_subscription( wcs_get_objects_property( $renewal_order, "id" ) );
-			// $subscription->set_requires_manual_renewal( true );
-			// $subscription->save();
+			$renewal_order->update_status( "pending" );
+
+			// $wc_email = WC()->mailer()->get_emails()["WC_Email_New_Order"];
+			// $wc_email->settings["subject"] = __("{site_title} - Assinatura pendente ({order_number}) - {order_date}");
+			// $wc_email->settings["heading"] = __("Assinatura pendente");
+			// $wc_email->settings["recipient"] = $renewal_order->get_billing_email();
+			// $wc_email->trigger( $renewal_order->ID );
 
 			return;
 		}
 
-		$renewal_order->update_status( "on-hold", __( "Aguardando pagamento", "triibo_assinaturas" ) );
+		// $this->log( "scheduled_subscription_payment(): order_id " . $renewal_order->ID . " | " . json_encode( $response ) );
 
 		$this->finalize_order( $renewal_order, $response["data"] );
-
-		$this->log( "scheduled_subscription_payment(): order_id " . $renewal_order->ID . " | " . json_encode( $response ) );
 
 		return;
 	}
