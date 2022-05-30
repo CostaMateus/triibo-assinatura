@@ -252,16 +252,20 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	/**
 	 * Verifica se cartão já foi tokenizado
 	 *
-	 * @param string $cardNumber
+	 * @param string $number
+	 * @param string $brand
 	 * @param string $token
 	 * @return array
 	 */
-	private function check_card_token( $cardNumber, $token )
+	private function check_card_token( $number, $brand, $token )
 	{
 		$params = [
 			"payload" => [
-				"gateway"    => $this->gateway->service,
-				"cardNumber" => $cardNumber,
+				"gateway"  => $this->gateway->service,
+				"cardInfo" => [
+					"number" => $number,
+					"brand"  => $brand,
+				]
 			]
 		];
 
@@ -297,7 +301,7 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	private function status_card( $posted )
 	{
 		$number   = substr( $posted[ "card_number" ], -4 );
-		$response = $this->check_card_token( $number, $posted[ "token" ] );
+		$response = $this->check_card_token( $number, $posted[ "brand" ], $posted[ "token" ] );
 
 		// CARTAO NAO TOKENIZADO
 		if ( ! $response["success"] )
@@ -469,7 +473,7 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 					"success"     => true,
 					"paymentInfo" => [
 						"id"      => null,
-						"status"  => 1,
+						"status"  => 2,
 						"message" => "Free Trial"
 					]
 				];
