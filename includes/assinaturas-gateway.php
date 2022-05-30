@@ -323,8 +323,7 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 		wp_enqueue_script( "triibo_assinaturas_checkout", plugins_url( "assets/js/frontend/transparent-checkout.js",   plugin_dir_path( __FILE__ ) ), [ "json2", "jquery", "woocommerce-extra-checkout-fields-for-brazil-front" ], WC_Triibo_Assinaturas::VERSION, true );
 
         $user = wp_get_current_user();
-		// $uid  = get_user_meta( $user->ID, "_triibo_id", true );
-		// $this->log->add( $this->id, "called on checkout_scripts" );
+
 		$this->api->validate_token( $user->ID );
 
 		$url = ( $this->mkt_homol === "yes" ) ? "https://dev-marketplace.triibo.com.br/wp-json/triibo_assinaturas/v1" : "https://marketplace.triibo.com.br/wp-json/triibo_assinaturas/v1";
@@ -487,6 +486,8 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	{
 		if ( $data["id"] ) $this->save_triibo_payment_data( $order->get_id(), $data );
 
+		$this->log( "INFO - finalize_order : ID " . $order->get_id() . " : " . json_encode( $data ) );
+
 		$order->payment_complete();
 		$order->update_status( "processing" );
 
@@ -542,7 +543,7 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 		if ( ! $response[ "success" ] )
 		{
-			$this->log( "ERROR scheduled_subscription_payment(): order_id " . $renewal_order->ID . " | " . json_encode( $response ) );
+			$this->log( "ERROR - scheduled_subscription_payment : order_id " . $renewal_order->ID . " | " . json_encode( $response ), true );
 
 			$renewal_order->update_status( "pending" );
 
@@ -554,8 +555,6 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 			return;
 		}
-
-		// $this->log( "scheduled_subscription_payment(): order_id " . $renewal_order->ID . " | " . json_encode( $response ) );
 
 		$this->finalize_order( $renewal_order, $response["data"] );
 
@@ -578,7 +577,7 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 		$sid = $subscription->get_id();
 
-		$this->log( "update_failing_payment_method(): SUB - $sid | id - $id | tk - $tk" );
+		$this->log( "ERROR - update_failing_payment_method : SUB - $sid | id - $id | tk - $tk", true );
 
 		update_post_meta( $sid, "_triibo_assinatura_payment_id",    $id );
 		update_post_meta( $sid, "_triibo_assinatura_payment_token", $tk );
@@ -621,9 +620,17 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 
 
-	private function log( $message )
+	private function log( $message, $is_error = null )
 	{
-		if ( $this->debug == "yes" ) $this->log->add( $this->id, $message );
+
+		if ( $this->debug == "yes" )
+		{
+			$this->log->add( $this->id, $message );
+		}
+		else if ( $is_error )
+		{
+			$this->log->add( $this->id, $message );
+		}
 	}
 
 
