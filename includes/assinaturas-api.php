@@ -152,7 +152,7 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	 */
 	private function exec( $api, $token, $params = null )
     {
-		$this->log( "EXEC - $api" );
+		$this->log( "INFO - executando api : $api" );
 
 		$curl   = curl_init();
 
