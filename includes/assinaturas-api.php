@@ -59,25 +59,25 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 			]
 		);
 
-		// register_rest_route(
-		// 	$this->namespace,
-		// 	"/payment/(?P<order_id>[0-9]+)/update/(?P<approved>[a-zA-Z]+)",
-		// 	[
-		// 		"methods"             => WP_REST_Server::READABLE, // GET
-		// 		"callback"            => [ $this, "update_subscription" ],
-		// 		"permission_callback" => "__return_true",
-		// 		"args"                => [
-		// 			"order_id" => [
-		// 				"required" => true,
-		// 				"type"     => "string",
-		// 			],
-		// 			"approved" => [
-		// 				"required" => true,
-		// 				"type"     => "string",
-		// 			],
-		// 		],
-		// 	]
-		// );
+		register_rest_route(
+			$this->namespace,
+			"/payment/(?P<order_id>[0-9]+)/update/(?P<approved>[a-zA-Z]+)",
+			[
+				"methods"             => WP_REST_Server::READABLE, // GET
+				"callback"            => [ $this, "update_subscription" ],
+				"permission_callback" => "__return_true",
+				"args"                => [
+					"order_id" => [
+						"required" => true,
+						"type"     => "string",
+					],
+					"approved" => [
+						"required" => true,
+						"type"     => "string",
+					],
+				],
+			]
+		);
 	}
 
 	/**
@@ -245,13 +245,28 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 		return $response;
 	}
 
-	// public function update_subscription( $data )
-	// {
-	// 	return [
-	// 		"order_id" => $data[ "order_id" ],
-	// 		"approved" => $data[ "approved" ],
-	// 	];
-	// }
+	public function update_subscription( $data )
+	{
+		$order_id = $data[ "order_id" ];
+
+		$order    = wc_get_order( $order_id );
+
+		if ( $data[ "approved" ] )
+		{
+			$data = [
+				"id"     => null,
+				"status" => 2,
+			];
+
+			$this->gateway->finalize_order( $order, $data );
+		}
+		else
+		{
+			$order->update_status( "pending" );
+		}
+
+		return;
+	}
 
 	/**
 	 * Tokeniza um cartão
