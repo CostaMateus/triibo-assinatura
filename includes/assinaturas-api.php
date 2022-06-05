@@ -245,8 +245,21 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 		return $response;
 	}
 
+	/**
+	 *
+	 * @return array
+	 */
 	public function update_subscription( $data )
 	{
+		if (
+			( $this->gateway->homol == "yes" && $data->get_header( "x-api-key" ) !== "54723162306C6F6A7052646D4C6170693030" )
+			||
+			( $this->gateway->homol != "yes" && $data->get_header( "x-api-key" ) !== "0303960716C4D6462507A6F6C60326132745" )
+		)
+		{
+			return new WP_REST_Response( [ "error" => "Unauthorized" ], 401 );
+		}
+
 		$order_id = $data[ "order_id" ];
 
 		$order    = wc_get_order( $order_id );
