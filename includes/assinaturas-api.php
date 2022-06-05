@@ -58,6 +58,26 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 				],
 			]
 		);
+
+		// register_rest_route(
+		// 	$this->namespace,
+		// 	"/payment/(?P<order_id>[0-9]+)/update/(?P<approved>[a-zA-Z]+)",
+		// 	[
+		// 		"methods"             => WP_REST_Server::READABLE, // GET
+		// 		"callback"            => [ $this, "update_subscription" ],
+		// 		"permission_callback" => "__return_true",
+		// 		"args"                => [
+		// 			"order_id" => [
+		// 				"required" => true,
+		// 				"type"     => "string",
+		// 			],
+		// 			"approved" => [
+		// 				"required" => true,
+		// 				"type"     => "string",
+		// 			],
+		// 		],
+		// 	]
+		// );
 	}
 
 	/**
@@ -225,6 +245,14 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 		return $response;
 	}
 
+	// public function update_subscription( $data )
+	// {
+	// 	return [
+	// 		"order_id" => $data[ "order_id" ],
+	// 		"approved" => $data[ "approved" ],
+	// 	];
+	// }
+
 	/**
 	 * Tokeniza um cartão
 	 *
@@ -325,7 +353,7 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 
 				return [
 					"success" => false,
-					"error"   => "2. $error"
+					"error"   => "$error (cod EP2)"
 				];
 			}
 
@@ -402,7 +430,7 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 
 				return [
 					"success" => false,
-					"error"   => "4. Falha ao alterar método de pagamento. Tente novamente."
+					"error"   => "Falha ao alterar método de pagamento. Tente novamente. (cod EP4)"
 				];
 			}
 
@@ -494,7 +522,30 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 
 				return [
 					"success" => false,
-					"error"   => "3. $error"
+					"error"   => "$error (cod EP3)"
+				];
+			}
+			else if ( in_array( $response[ "paymentInfo" ][ "status" ], [ 3, 10, 11, 13 ] ) )
+			{
+				// failure
+				// 3  : 'Denied',           // Pagamento negado por Autorizador.
+				// 10 : 'Voided',           // Pagamento cancelado.
+				// 11 : 'Refunded',         // Pagamento cancelado após 23h59 do dia de autorização.
+				// 13 : 'Aborted',          // Pagamento cancelado por falha no processamento ou por ação do Antifraude.
+
+				$error = "Cobrança recusada pela operadora do cartão.";
+				$this->log( "ERROR - do_payment : " . json_encode( [ $error, $response, $data ] ), true );
+
+				// SE TOKEN DO CARTAO FOI CRIADO NESSE MOMENTO, EXCLUI
+				if ( $status_card[ "created" ] )
+				{
+					$response = $this->delete_card_token( $status_card[ "tokenIndex" ], $posted[ "token" ] );
+					$this->log( "WARNING - delete_card_token : " . json_encode( [ $response ] ) );
+				}
+
+				return [
+					"success" => false,
+					"error"   => "$error (cod EP6)"
 				];
 			}
 
@@ -513,7 +564,7 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 		// Return error message.
 		return [
 			"success" => false,
-			"error"   => "<strong>Triibo Recorrente</strong>: " . __( "Ocorreu um erro ao processar seu pagamento, tente novamente. Ou entre em contato conosco para obter assistência.", "triibo_assinaturas" ),
+			"error"   => "<strong>Triibo Recorrente</strong>: " . __( "Ocorreu um erro ao processar seu pagamento, tente novamente. Ou entre em contato conosco para obter assistência. (cod EP99)", "triibo_assinaturas" ),
 		];
 	}
 
@@ -569,7 +620,24 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 
 			return [
 				"success"    => false,
-				"error"      => "5. $error",
+				"error"      => "$error (cod EP5)",
+				"full_error" => $response,
+			];
+		}
+		else if ( in_array( $response[ "paymentInfo" ][ "status" ], [ 3, 10, 11, 13 ] ) )
+		{
+			// failure
+			// 3  : 'Denied',           // Pagamento negado por Autorizador.
+			// 10 : 'Voided',           // Pagamento cancelado.
+			// 11 : 'Refunded',         // Pagamento cancelado após 23h59 do dia de autorização.
+			// 13 : 'Aborted',          // Pagamento cancelado por falha no processamento ou por ação do Antifraude.
+
+			$error = "Cobrança recusada pela operadora do cartão.";
+			$this->log( "ERROR - do_payment renewal : " . json_encode( [ $error, $response, $data ] ), true );
+
+			return [
+				"success"    => false,
+				"error"      => "$error (cod EP7)",
 				"full_error" => $response,
 			];
 		}
