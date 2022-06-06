@@ -261,7 +261,7 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 				"class"       => "wc-enhanced-select",
 				"options"     => [
 					"cielo"     => __( "Cielo",     "triibo_assinaturas" ),
-					"pagseguro" => __( "PagSeguro", "triibo_assinaturas" ),
+					// "pagseguro" => __( "PagSeguro", "triibo_assinaturas" ),
 					// "value"     => __( "Name",      "triibo_assinaturas" ),
 				],
 			],
