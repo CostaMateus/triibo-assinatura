@@ -484,30 +484,33 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	 */
 	public function finalize_order( $order, $data )
 	{
-		if ( $data[ "id" ] ) $this->save_triibo_payment_data( $order->get_id(), $data );
-
-		$this->log( "INFO - finalize_order : ID " . $order->get_id() . " : " . json_encode( $data ) );
-
-		// waiting
-		// 0  : 'NotFinished',      // Aguardando atualização de status.
-		// 12 : 'Pending',          // Aguardandoretorno da instituição xfinanceira.
-		//
-		// success
-		// 1  : 'Authorized',       // Pagamento apto a ser capturado ou definido como pago.
-		// 2  : 'PaymentConfirmed', // Pagamento confirmado e finalizado.
-
-		switch ( $data[ "status" ] )
+		if ( $order )
 		{
-			case 1:
-			case 2:
-				$order->payment_complete();
-				$order->update_status( "processing" );
-			break;
+			if ( $data[ "id" ] ) $this->save_triibo_payment_data( $order->get_id(), $data );
 
-			case 0:
-			case 12:
-				$order->update_status( "on-hold" );
-			break;
+			$this->log( "INFO - finalize_order : ID " . $order->get_id() . " : " . json_encode( $data ) );
+
+			// waiting
+			// 0  : 'NotFinished',      // Aguardando atualização de status.
+			// 12 : 'Pending',          // Aguardandoretorno da instituição xfinanceira.
+			//
+			// success
+			// 1  : 'Authorized',       // Pagamento apto a ser capturado ou definido como pago.
+			// 2  : 'PaymentConfirmed', // Pagamento confirmado e finalizado.
+
+			switch ( $data[ "status" ] )
+			{
+				case 1:
+				case 2:
+					$order->payment_complete();
+					$order->update_status( "processing" );
+				break;
+
+				case 0:
+				case 12:
+					$order->update_status( "on-hold" );
+				break;
+			}
 		}
 
 		return;
