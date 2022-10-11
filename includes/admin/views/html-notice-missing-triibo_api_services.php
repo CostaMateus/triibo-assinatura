@@ -19,14 +19,14 @@ if ( function_exists( "get_plugins" ) )
 <div class="error">
 	<p>
 		<strong>
-			<?php esc_html_e( "WooCommerce Triibo Recorrente", "triibo_assinaturas" ); ?>
+			<?php esc_html_e( "#Triibo_Assinatura", "triibo_assinaturas" ); ?>
 		</strong>
 		<?php esc_html_e( "depende da última versão do 'Triibo API Services' para funcionar!", "triibo_assinaturas" ); ?>
 	</p>
 
 	<?php if ( $is_installed && current_user_can( "install_plugins" ) ) : ?>
 		<p>
-			<a href="<?php echo esc_url( wp_nonce_url( self_admin_url( "plugins.php?action=activate&plugin=triibo-api-services/triibo-api-services.php&plugin_status=active" ), "activate-plugin_triibo-api-services/triibo-api-services/triibo-api-services/triibo-api-services.php" ) ); ?>" class="button button-primary">
+			<a href="<?php echo esc_url( wp_nonce_url( self_admin_url( "plugins.php?action=activate&plugin=triibo-api-services/triibo-api-services.php&plugin_status=active" ), "activate-plugin_triibo-api-services/triibo-api-services.php" ) ); ?>" class="button button-primary">
 				<?php esc_html_e( "Ative 'Triibo API Services'", "triibo_assinaturas" ); ?>
 			</a>
 		</p>

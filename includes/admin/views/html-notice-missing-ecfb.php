@@ -20,7 +20,7 @@ if ( function_exists( "get_plugins" ) )
 <div class="error">
 	<p>
 		<strong>
-			<?php esc_html_e( "Triibo Recorrente", "triibo_assinaturas" ); ?>
+			<?php esc_html_e( "#Triibo_Assinatura", "triibo_assinaturas" ); ?>
 		</strong>
 		<?php esc_html_e( "depende da última versão do Extra Checkout Fields for Brazil para funcionar!", "triibo_assinaturas" ); ?>
 	</p>
