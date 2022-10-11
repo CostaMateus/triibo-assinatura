@@ -49,7 +49,7 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 			$this->order_button_text  = __( "Prossiga para o pagamento",                                 "triibo_assinaturas" );
 
 			// Subscriptions
-			$this->supports = apply_filters( "triibo_assinaturas_supports_array", [
+			$this->supports           = apply_filters( "triibo_assinaturas_supports_array", [
 				"subscriptions",
 				"subscription_cancellation",
 				"subscription_suspension",
@@ -69,20 +69,10 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 			$this->init_settings();
 
 			// Define user set variables.
-			$this->title             = $this->get_option( "title"            );
-			$this->description       = $this->get_option( "description"      );
-
-			$this->mkt_homol         = $this->get_option( "mkt_homol", "yes" );
-			$this->homol             = $this->get_option( "homol",     "yes" );
-
-			$this->homol_account     = $this->get_option( "homol_account"    );
-			$this->homol_password    = $this->get_option( "homol_password"   );
-
-			$this->account           = $this->get_option( "account"          );
-			$this->password          = $this->get_option( "password"         );
-
-			$this->service           = $this->get_option( "service"          );
-			$this->debug             = $this->get_option( "debug"            );
+			$this->title       = $this->get_option( "title"       );
+			$this->description = $this->get_option( "description" );
+			$this->service     = $this->get_option( "service"     );
+			$this->debug       = $this->get_option( "debug"       );
 
 			$this->cc_hide_cpf_field = apply_filters( "triibo_assinaturas_hide_cpf_field", false );
 
@@ -92,7 +82,8 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 				$this->log = ( function_exists( "wc_get_logger" ) ) ? wc_get_logger() : new WC_Logger();
 			}
 
-			$this->api = new WC_Triibo_Assinaturas_API( $this );
+			$this->node = new Triibo_Api_Node();
+			$this->api  = new WC_Triibo_Assinaturas_API( $this, $this->node );
 
 			$this->init_actions();
 		}
@@ -111,19 +102,13 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	public function init_actions()
 	{
 		add_action( "wp_enqueue_scripts",                                                   [ $this, "checkout_scripts"                                  ]        );
-		add_filter( "woocommerce_credit_card_form_fields",                                  [ $this, "filter_cc_fields"                                  ], 10, 2 );
-
 		add_action( "woocommerce_scheduled_subscription_payment_"              . $this->id, [ $this, "scheduled_subscription_payment"                    ], 10, 2 );
-
 		add_action( "woocommerce_update_options_payment_gateways_"             . $this->id, [ $this, "process_admin_options"                             ]        );
-
 		add_action( "woocommerce_subscription_failing_payment_method_updated_" . $this->id, [ $this, "update_failing_payment_method"                     ], 10, 2 );
+
+		add_filter( "woocommerce_credit_card_form_fields",                                  [ $this, "filter_cc_fields"                                  ], 10, 2 );
 		add_filter( "woocommerce_can_subscription_be_updated_to_new-payment-method",        [ $this, "can_subscription_be_updated_to_new_payment_method" ], 20, 2 );
 		add_filter( "woocommerce_subscriptions_update_payment_via_pay_shortcode",           [ $this, "can_update_all_subscriptions"                      ], 20, 3 );
-
-		// add_filter( "woocommerce_subscription_payment_meta",                                [ $this, "add_subscription_payment_meta"                     ], 10, 2 );
-		// add_filter( "woocommerce_subscription_validate_payment_meta",                       [ $this, "validate_subscription_payment_meta"                ], 10, 2 );
-		// add_action( "woocommerce_subscription_status_updated",                              [ $this, "subscription_status_changed_NO_PAGSEGURO"          ], 10, 3 );
 	}
 
 	/**
@@ -137,26 +122,6 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	}
 
 	/**
-	 * Get account.
-	 *
-	 * @return string
-	 */
-	public function get_account()
-	{
-		return ( $this->homol === "yes" ) ? $this->homol_account : $this->account;
-	}
-
-	/**
-	 * Get password.
-	 *
-	 * @return string
-	 */
-	public function get_password()
-	{
-		return ( $this->homol === "yes" ) ? $this->homol_password : $this->password;
-	}
-
-	/**
 	 * Returns a value indicating the the Gateway is available or not. It's called
 	 * automatically by WooCommerce before allowing customers to use the gateway
 	 * for payment.
@@ -167,8 +132,7 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	{
 		// Test if is valid for use.
 		$available = "yes" === $this->get_option( "enabled" ) &&
-					 ""    !== $this->get_account()           &&
-					 ""    !== $this->get_password()          &&
+					 $this->node->status()                    &&
 					 $this->using_supported_currency()        &&
 					 (
 						wcs_cart_contains_renewal()                         ||
@@ -188,22 +152,28 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	 */
 	protected function get_log_view()
 	{
-		if ( defined( "WC_VERSION" ) && version_compare( WC_VERSION, "2.2", ">=" ) )
-		{
-			$date      = date( "Y-m-d" );
-			$esc_attr  = esc_attr( $this->id );
-			$sanitize  = sanitize_file_name( wp_hash( $this->id ) );
-			$admin_url = "admin.php?page=wc-status&tab=logs&log_file=$esc_attr-$date-$sanitize.log";
-			$link      = esc_url( admin_url( $admin_url ) );
-			$text      = __( "System Status &gt; Logs", "triibo_assinaturas" );
+		$date      = date( "Y-m-d" );
+		$esc_attr  = esc_attr( $this->id );
+		$sanitize  = sanitize_file_name( wp_hash( $this->id ) );
+		$admin_url = "admin.php?page=wc-status&tab=logs&log_file=$esc_attr-$date-$sanitize.log";
+		$link      = esc_url( admin_url( $admin_url ) );
+		$text      = __( "System Status &gt; Logs", "triibo_assinaturas" );
 
-			return "<a href='$link' target='_blank' >$text</a>";
-		}
+		return "<a href='$link' target='_blank' >$text</a>";
+	}
 
-		$esc_attr = esc_attr( $this->id );
-		$sanitize = sanitize_file_name( wp_hash( $this->id ) );
+	/**
+	 * Get log.
+	 *
+	 * @return string
+	 */
+	protected function get_global_config()
+	{
+		$triibo = Triibo_Api_Services::get_name( true );
+        $url    = esc_url( admin_url( "admin.php?page={$triibo}" ) );
+		$text   = __( "clicando aqui", "triibo_assinaturas" );
 
-		return "<code>woocommerce/logs/$esc_attr-$sanitize.txt</code>";
+		return "<a href='{$url}' target='_blank' >{$text}</a>";
 	}
 
 	/**
@@ -234,25 +204,6 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 				"default"     => __( "Pague com a Triibo",                                            "triibo_assinaturas" ),
 			],
 
-			// integração
-			"integration"     => [
-				"title"       => __( "Integração", "triibo_assinaturas" ),
-				"type"        => "title",
-				"description" => "",
-			],
-			"homol"           => [
-				"type"        => "checkbox",
-				"title"       => __( "API HOMOL",                                                     "triibo_assinaturas" ),
-				"label"       => __( "Ativar API Triibo de homologação",                              "triibo_assinaturas" ),
-				"default"     => "yes",
-			],
-			"mkt_homol"         => [
-				"type"        => "checkbox",
-				"title"       => __( "Marketplace HOMOL",                                             "triibo_assinaturas" ),
-				"label"       => __( "Ativar ambiente Marketplace de homologação",                    "triibo_assinaturas" ),
-				"default"     => "yes",
-			],
-
 			"service"         => [
 				"type"        => "select",
 				"title"       => __( "Serviço de pagamento",                                          "triibo_assinaturas" ),
@@ -266,43 +217,19 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 				],
 			],
 
-			"homol_account"   => [
-				"type"        => "text",
-				"title"       => __( "Conta HOMOL",                                                   "triibo_assinaturas" ),
-				"description" => __( "Entre com a conta de autenticação do Gateway Triibo de HOMOL.", "triibo_assinaturas" ),
-				"desc_tip"    => true,
-				"default"     => "",
-			],
-			"homol_password"  => [
-				"type"        => "text",
-				"title"       => __( "Senha HOMOL",                                                   "triibo_assinaturas" ),
-				"description" => __( "Entre com a senha de autenticação do Gateway Triibo de HOMOL.", "triibo_assinaturas" ),
-				"desc_tip"    => true,
-				"default"     => "",
-			],
-
-			"account"         => [
-				"type"        => "text",
-				"title"       => __( "Conta",                                                         "triibo_assinaturas" ),
-				"description" => __( "Entre com a conta de autenticação do Gateway Triibo de PROD.",  "triibo_assinaturas" ),
-				"desc_tip"    => true,
-				"default"     => "",
-			],
-			"password"        => [
-				"type"        => "text",
-				"title"       => __( "Senha",                                                         "triibo_assinaturas" ),
-				"description" => __( "Entre com a senha de autenticação do Gateway Triibo de PROD.",  "triibo_assinaturas" ),
-				"desc_tip"    => true,
-				"default"     => "",
-			],
-
 			"debug"           => [
 				"type"        => "checkbox",
 				"title"       => __( "Debug Log",                                                     "triibo_assinaturas" ),
 				"label"       => __( "Ativar logger",                                                 "triibo_assinaturas" ),
 				"description" => sprintf( __( "Registrar log de eventos, %s", "triibo_assinaturas" ), $this->get_log_view() ),
 				"default"     => "yes",
-			]
+			],
+
+			"configs" => [
+				"type"        => "title",
+				"title"       => __( "Chaves de API",                                                 "triibo_assinaturas" ),
+				"description" => sprintf( __( "Acessar configurações globais %s.", "triibo_assinaturas" ), $this->get_global_config() ),
+			],
 		];
 	}
 
@@ -326,7 +253,8 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 		$this->api->validate_token( $user->ID );
 
-		$url = ( $this->mkt_homol === "yes" ) ? "https://dev-marketplace.triibo.com.br/wp-json/triibo_assinaturas/v1" : "https://marketplace.triibo.com.br/wp-json/triibo_assinaturas/v1";
+		// $url = ( $this->node->env() ) ? "https://dev-marketplace.triibo.com.br/wp-json/triibo_assinaturas/v1" : "https://marketplace.triibo.com.br/wp-json/triibo_assinaturas/v1";
+		$url = "http://localhost:8000/wp-json/triibo_assinaturas/v1";
 
 		wp_localize_script(
 			"triibo_assinaturas_checkout",
@@ -366,8 +294,6 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 		{
 			$id = esc_attr( $this->id );
 
-			$is_update_payment_method = is_wc_endpoint_url( "order-pay" );
-
 			$fields[ "card-expiry-field" ] =
 			"<p class='form-row form-row-first'>
 				<label for='" . $id . "-card-expiry' >"      . esc_html__( "Validade (MM/YY)", "triibo_assinaturas" ) . "&nbsp;<span class='required' >*</span></label>
@@ -380,7 +306,7 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 				<input id='"  . $id . "-card-holder-name' class='input-text wc-credit-card-form_card_holder_name' type='text' placeholder='" . esc_attr__( "Informe o nome do titular", "triibo_assinaturas" ) . "' " . $this->field_name( "card-holder-name" ) . " />
 			</p>";
 
-			if ( false === $this->cc_hide_cpf_field       || $is_update_payment_method )
+			if ( false === $this->cc_hide_cpf_field || is_wc_endpoint_url( "order-pay" ) )
 			{
 				$fields[ "card-cpf" ] =
 				"<p class='form-row form-row-wide'>
@@ -403,7 +329,7 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 			|| wcs_cart_contains_renewal()
 			|| WC_Subscriptions_Change_Payment_Gateway::$is_request_to_change_payment )
 		{
-			$description = ( "yes" == $this->homol ) ? $this->get_description() . __( " - HOMOL ativado.", "triibo_assinaturas" ) : $this->get_description();
+			$description = ( $this->node->env() ) ? $this->get_description() . __( " - HOMOL ativado.", "triibo_assinaturas" ) : $this->get_description();
 
 			if ( $description ) echo wpautop( wptexturize( trim( $description ) ) );
 
@@ -490,13 +416,15 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 			$this->log( "INFO - finalize_order : ID " . $order->get_id() . " : " . json_encode( $data ) );
 
-			// waiting
-			// 0  : 'NotFinished',      // Aguardando atualização de status.
-			// 12 : 'Pending',          // Aguardandoretorno da instituição xfinanceira.
-			//
-			// success
-			// 1  : 'Authorized',       // Pagamento apto a ser capturado ou definido como pago.
-			// 2  : 'PaymentConfirmed', // Pagamento confirmado e finalizado.
+			/**
+			 * waiting
+			 * 0  : 'NotFinished',      // Aguardando atualização de status.
+			 * 12 : 'Pending',          // Aguardandoretorno da instituição xfinanceira.
+			 *
+			 * success
+			 * 1  : 'Authorized',       // Pagamento apto a ser capturado ou definido como pago.
+			 * 2  : 'PaymentConfirmed', // Pagamento confirmado e finalizado.
+			 */
 
 			switch ( $data[ "status" ] )
 			{
@@ -569,12 +497,6 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 			$renewal_order->update_status( "pending" );
 
-			// $wc_email = WC()->mailer()->get_emails()[ "WC_Email_New_Order" ];
-			// $wc_email->settings[ "subject" ] = __("{site_title} - Assinatura pendente ({order_number}) - {order_date}");
-			// $wc_email->settings[ "heading" ] = __("Assinatura pendente");
-			// $wc_email->settings[ "recipient" ] = $renewal_order->get_billing_email();
-			// $wc_email->trigger( $renewal_order->ID );
-
 			return;
 		}
 
@@ -582,8 +504,6 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 		return;
 	}
-
-
 
 	/**
 	 * Update the _pagseguro_assinatura for a subscription after using Pagseguro Recorrente to complete a payment to make up for.
@@ -640,11 +560,8 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 		return $can_update;
 	}
 
-
-
 	private function log( $message, $is_error = null )
 	{
-
 		if ( $this->debug == "yes" )
 		{
 			$this->log->add( $this->id, $message );
@@ -654,558 +571,4 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 			$this->log->add( $this->id, $message );
 		}
 	}
-
-
-	/**
-	 * Process initial payment, after receiving notification of validation transaction
-	 *
-	 * @param string $order WC_Order
-	 */
-	// public function process_initial_payment( WC_Order $order ) {
-
-	// 	if(  wcs_order_contains_subscription( $order, array( "parent", "renewal" ) ) && "yes" != $order->get_meta("_pr_processing") ) {
-
-	// 		$order->update_meta_data("_pr_processing", "yes");
-	// 		$order->save();
-
-	// 		$response = $this->process_subscription_payment( $order, $order->get_total() );
-
-	// 		if ( "yes" === $this->debug ) {
-	// 			$this->log->add( $this->id, "Processing payment on pending order: " . $order->get_id() . ". Response:" . print_r($response, true) );
-	// 		}
-	// 	}
-
-	// 	return;
-	// }
-
-
-	/**
-	 * Update order status.
-	 *
-	 * @param array $posted PagSeguro post data.
-	 */
-	// public function update_order_status( $posted ) {
-	// 	if ( isset( $posted->reference ) ) {
-	// 		$id    = (int) str_replace( $this->invoice_prefix, "", $posted->reference );
-	// 		$order = wc_get_order( $id );
-
-	// 		// Check if order exists.
-	// 		if ( ! $order ) {
-	// 			return;
-	// 		}
-
-	// 		if( "" == get_post_meta($order->get_id(), "_pagseguro_assinatura", true ) ) {
-	// 			return;
-	// 		}
-
-	// 		// Checks whether the invoice number matches the order.
-	// 		// If true processes the payment.
-	// 		if ( $order->get_id() === $id ) {
-
-	// 			if ( "yes" === $this->debug ) {
-	// 				$this->log->add( $this->id, "PagSeguro payment status for order " . $order->get_id() . " is: " . intval( $posted->status ) );
-	// 			}
-
-	// 			$transaction_id = get_post_meta($order->get_id(), "_pagseguro_transaction_id", true);
-	// 			$posted_transaction_id = str_replace("-", "", $posted->code );
-
-	// 			if( $posted_transaction_id == $transaction_id ) {
-
-	// 				switch ( intval( $posted->status ) ) {
-	// 					case 1:
-	// 						$order->update_status( "on-hold" );
-	// 						$order->add_order_note( __( "PagSeguro: The buyer initiated the transaction. Waiting for payment confirmation.", "triibo_assinaturas" ) );
-	// 						break;
-	// 					case 2:
-	// 						$order->update_status( "on-hold" );
-	// 						$order->add_order_note( __( "PagSeguro: Payment under review.", "triibo_assinaturas" )  );
-	// 						// Reduce stock for billets.
-	// 						if ( function_exists( "wc_reduce_stock_levels" ) ) {
-	// 							wc_reduce_stock_levels( $order->get_id() );
-	// 						}
-
-	// 						break;
-	// 					case 3:
-	// 						// Sometimes PagSeguro should change an order from cancelled to paid, so we need to handle it.
-	// 						if ( method_exists( $order, "get_status" ) && "cancelled" === $order->get_status() ) {
-	// 							$order->update_status( "processing", __( "PagSeguro: Payment approved.", "triibo_assinaturas" ) );
-	// 							wc_reduce_stock_levels( $order->get_id() );
-	// 						} else {
-	// 							$order->add_order_note( __( "PagSeguro: Payment approved.", "triibo_assinaturas" ) );
-
-	// 							// Changing the order for processing and reduces the stock.
-	// 							$order->payment_complete( sanitize_text_field( (string) $posted->code ) );
-	// 						}
-
-	// 						break;
-	// 					case 4:
-	// 						$order->add_order_note( __( "PagSeguro: Payment completed and credited to your account.", "triibo_assinaturas" ) );
-
-	// 						break;
-	// 					case 5:
-	// 						$order->update_status( "on-hold" );
-	// 						$order->add_order_note( __( "PagSeguro: Payment came into dispute.", "triibo_assinaturas" ) );
-	// 						$this->send_email(
-	// 							/* translators: %s: order number */
-	// 							sprintf( __( "Payment for order %s came into dispute", "triibo_assinaturas" ), $order->get_id() ),
-	// 							__( "Payment in dispute", "triibo_assinaturas" ),
-	// 							/* translators: %s: order number */
-	// 							sprintf( __( "Order %s has been marked as on-hold, because the payment came into dispute in PagSeguro.", "triibo_assinaturas" ), $order->get_id() )
-	// 						);
-
-	// 						break;
-	// 					case 6:
-	// 						$order->update_status( "refunded", __( "PagSeguro: Payment refunded.", "triibo_assinaturas" ) );
-	// 						$this->send_email(
-	// 							/* translators: %s: order number */
-	// 							sprintf( __( "Payment for order %s refunded", "triibo_assinaturas" ), $order->get_id() ),
-	// 							__( "Payment refunded", "triibo_assinaturas" ),
-	// 							/* translators: %s: order number */
-	// 							sprintf( __( "Order %s has been marked as refunded by PagSeguro.", "triibo_assinaturas" ), $order->get_id() )
-	// 						);
-
-	// 						if ( function_exists( "wc_increase_stock_levels" ) ) {
-	// 							wc_increase_stock_levels( $order->get_id() );
-	// 						}
-
-	// 						break;
-	// 					case 7:
-
-	// 						if( wcs_order_contains_renewal( $order ) ) {
-
-	// 							// Maybe actvate this to test retry payments.
-	// 							add_filter("wcs_is_scheduled_payment_attempt", "__return_true" );
-
-	// 							$order->update_status( "failed", __( "PagSeguro: Payment cancelled.", "triibo_assinaturas" ) );
-
-
-	// 							if ( function_exists( "wc_increase_stock_levels" ) ) {
-	// 								wc_increase_stock_levels( $order->get_id() );
-	// 							}
-
-	// 						} else {
-
-	// 							$order->update_status( "cancelled", __( "PagSeguro: Payment canceled.", "triibo_assinaturas" ) );
-
-	// 							if ( function_exists( "wc_increase_stock_levels" ) ) {
-	// 								wc_increase_stock_levels( $order->get_id() );
-	// 							}
-
-	// 						}
-
-	// 						break;
-
-	// 					default:
-	// 						break;
-	// 				}
-	// 			} else {
-
-	// 				// If got to this point, it"s probably a validation transaction
-	// 				if( (int) $posted->type == 1 && (int) $posted->status == 6 ) {
-
-	// 					$order->add_order_note( __( "PagSeguro IPN: Credit Card Validated.", "triibo_assinaturas" ) );
-
-	// 					$this->process_initial_payment( $order );
-
-	// 				} else if( (int) $posted->type == 7 ) {
-
-	// 					$order->update_status( "cancelled", __( "PagSeguro: Payment canceled.", "triibo_assinaturas" ) );
-
-	// 				} else {
-	// 					if ( "yes" === $this->debug ) {
-	// 						$this->log->add( $this->id, "$posted_transaction_id (".$posted_transaction_id.") and $transaction_id (".$transaction_id.") no not match." );
-	// 					}
-	// 				}
-	// 			}
-	// 		} else {
-	// 			if ( "yes" === $this->debug ) {
-	// 				$this->log->add( $this->id, "Error: Order Key does not match with PagSeguro reference." );
-	// 			}
-	// 		}
-	// 	}
-	// 	return;
-	// }
-
-	/**
-	 * Update pre-approval status.
-	 *
-	 * @param array $posted PagSeguro post data.
-	 */
-	// public function update_preapproval_status( $posted ) {
-
-	// 	if ( isset( $posted->reference ) && isset( $posted->code ) ) {
-	// 		$id    = (int) str_replace( $this->invoice_prefix, "", $posted->reference );
-	// 		$order = wc_get_order( $id );
-
-	// 		// Check if order exists.
-	// 		if ( ! $order ) {
-	// 			return;
-	// 		}
-
-	// 		$order_id = method_exists( $order, "get_id" ) ? $order->get_id() : $order->id;
-
-	// 		// Checks whether the invoice number matches the order.
-	// 		// If true processes the payment.
-	// 		if ( $order_id === $id ) {
-
-	// 			if ( wcs_order_contains_subscription( $order_id ) ) {
-	// 				$subscriptions = wcs_get_subscriptions_for_order( $order_id );
-	// 			} else if ( wcs_order_contains_renewal( $order_id ) ) {
-	// 				$subscriptions = wcs_get_subscriptions_for_renewal_order( $order_id );
-	// 			} else {
-	// 				$subscriptions = array();
-	// 			}
-
-	// 			if( empty( $subscriptions ) )
-	// 				return;
-
-	// 			$subscription = array_pop( $subscriptions );
-
-	// 			$assinatura = get_post_meta( $subscription->get_id(), "_pagseguro_assinatura", true);
-
-	// 			if( $assinatura == $posted->code ) {
-
-	// 				if ( "yes" === $this->debug ) {
-	// 					$this->log->add( $this->id, "PagSeguro preaproval status for subscription " . $subscription->get_id() . " is: " . $posted->status );
-	// 				}
-
-	// 				if( isset( $posted->tracker ) ) {
-	// 					$tracker = (string) $posted->tracker;
-	// 					update_post_meta( $subscription->get_id(), "_pagseguro_tracker", sanitize_text_field( $tracker) );
-	// 				}
-
-	// 				switch ( $posted->status ) {
-	// 					case "INITIATED":
-	// 						//O comprador iniciou o processo de pagamento, mas abandonou o checkout e não concluiu a compra.
-	// 						$subscription->add_order_note( __( "PagSeguro: The buyer initiated the transaction, but so far the PagSeguro not received any payment information.", "triibo_assinaturas" ) );
-
-	// 						break;
-	// 					case "PENDING":
-	// 						//O processo de pagamento foi concluído e transação está em análise ou aguardando a confirmação da operadora.
-	// 						$subscription->add_order_note( __( "PagSeguro: Payment under review.", "triibo_assinaturas" ) );
-
-	// 						break;
-	// 					case "ACTIVE":
-	// 						// A criação da recorrência, transação validadora ou transação recorrente foi aprovada.
-	// 						// And we don"t update the status, because we want to make sure the the status is updated bases on the orders.
-	// 						$subscription->add_order_note( __( "PagSeguro: The preApproval, authorization or recurring transaction was approved.", "triibo_assinaturas" ) );
-
-	// 						break;
-	// 					case "PAYMENT_METHOD_CHANGE":
-	// 						// Uma transação retornou como "Cartão Expirado, Cancelado ou Bloqueado" e o cartão da recorrência precisa ser substituído pelo comprador.
-	// 						$subscription->add_order_note( __( "PagSeguro: Credit card needs to be updated by buyer.", "triibo_assinaturas" ) );
-	// 						$subscription->add_order_note( __( "Your credit card needs to be updated", "triibo_assinaturas" ), 1 );
-
-	// 						break;
-	// 					case "SUSPENDED":
-	// 						// A recorrência foi suspensa pelo vendedor.
-	// 						$subscription->update_status( "on-hold", __( "PagSeguro: The preapproval was suspended.", "triibo_assinaturas" ) );
-
-	// 						break;
-	// 					case "CANCELLED":
-	// 						// A criação da recorrência foi cancelada pelo PagSeguro
-	// 						$subscription->update_status( "cancelled", __( "PagSeguro: Preapproval was cancelled by Pagseguro.", "triibo_assinaturas" ) );
-
-	// 						break;
-	// 					case "CANCELLED_BY_RECEIVER":
-	// 						// A recorrência foi cancelada a pedido do vendedor.
-	// 						$subscription->update_status( "cancelled", __( "PagSeguro: Preapproval was cancelled by shop owner.", "triibo_assinaturas" ) );
-
-	// 						break;
-	// 					case "CANCELLED_BY_SENDER":
-	// 						// A recorrência foi cancelada a pedido do comprador.
-	// 						$subscription->update_status( "cancelled", __( "PagSeguro: Preapproval was cancelled by buyer.", "triibo_assinaturas" ) );
-
-	// 						break;
-	// 					case "EXPIRED":
-	// 						// A recorrência expirou por atingir a data limite da vigência ou por ter atingido o valor máximo de cobrança definido na cobrança do plano.
-	// 						$subscription->update_status( "cancelled", __( "PagSeguro: Preapproval expired.", "triibo_assinaturas" ) );
-
-	// 						break;
-	// 					default:
-	// 						break;
-	// 				}
-	// 			} else {
-	// 				if ( "yes" === $this->debug ) {
-	// 					$this->log->add( $this->id, "Error: Preapproval code does not match with PagSeguro code." );
-	// 				}
-	// 			}
-	// 		} else {
-	// 			if ( "yes" === $this->debug ) {
-	// 				$this->log->add( $this->id, "Error: Order Key does not match with PagSeguro reference." );
-	// 			}
-	// 		}
-	// 	}
-	// 	return;
-	// }
-
-
-	/**
-	 * Send email notification.
-	 *
-	 * @param string $subject Email subject.
-	 * @param string $title   Email title.
-	 * @param string $message Email message.
-	 */
-	// protected function send_email( $subject, $title, $message ) {
-	// 	$mailer = WC()->mailer();
-
-	// 	$mailer->send( get_option( "admin_email" ), $subject, $mailer->wrap_message( $title, $message ) );
-	// }
-
-	/**
-	 * Get the Pagseguro plan for pre-approval of a customer
-	 *
-	 * @param string $period WooCommerce Subscriptions period
-	 * @param int $interval WooCommerce Subscriptions interval
-	 * @return string $plan Pagseguro Plan code for pre-approval of a customer
-	 */
-	// public function get_pagseguro_plan( $period = "month", $interval = 1 ) {
-
-	// 	$plan = "";
-
-	// 	if ( "yes" === $this->homol ) {
-
-	// 		switch($period) {
-	// 			case "month":
-	// 				if( 2 == $interval ) {
-	// 					$plan = $this->homol_bimonthly_plan;
-	// 				} else if( 3 == $interval ) {
-	// 					$plan = $this->homol_trimonthly_plan;
-	// 				} else if( 6 == $interval ) {
-	// 					$plan = $this->homol_semiannually_plan;
-	// 				} else {
-	// 					$plan = $this->homol_monthly_plan;
-	// 				}
-	// 				break;
-	// 			case "week":
-	// 				$plan = $this->homol_weekly_plan;
-	// 				break;
-	// 			case "year":
-	// 				$plan = $this->homol_yearly_plan;
-	// 				break;
-	// 		}
-
-	// 	} else {
-
-	// 		switch($period) {
-	// 			case "month":
-	// 				if( 2 == $interval ) {
-	// 					$plan = $this->bimonthly_plan;
-	// 				} else if( 3 == $interval ) {
-	// 					$plan = $this->trimonthly_plan;
-	// 				} else if( 6 == $interval ) {
-	// 					$plan = $this->semiannually_plan;
-	// 				} else {
-	// 					$plan = $this->monthly_plan;
-	// 				}
-	// 				break;
-	// 			case "week":
-	// 				$plan = $this->weekly_plan;
-	// 				break;
-	// 			case "year":
-	// 				$plan = $this->yearly_plan;
-	// 				break;
-	// 		}
-
-	// 	}
-
-	// 	if( "" == $plan ) {
-
-	// 		$reponse = $this->api->create_manual_plan( $period, $interval );
-
-
-	// 		if(isset( $reponse[ "code" ] ) ) {
-
-	// 			$option = "";
-
-	// 			if ( "yes" === $this->homol ) {
-
-	// 				switch($period) {
-	// 					case "month":
-	// 						if( 2 == $interval ) {
-	// 							$option = "homol_bimonthly_plan";
-	// 						} else if( 3 == $interval  ) {
-	// 							$option = "homol_trimonthly_plan";
-	// 						} else if( 6 == $interval  ) {
-	// 							$option = "homol_semiannually_plan";
-	// 						} else {
-	// 							$option = "homol_monthly_plan";
-	// 						}
-	// 						break;
-	// 					case "week":
-	// 						$option = "homol_weekly_plan";
-	// 						break;
-	// 					case "year":
-	// 						$option = "homol_yearly_plan";
-	// 						break;
-	// 				}
-
-	// 			} else {
-
-	// 				switch($period) {
-	// 					case "month":
-	// 						if( 2 == $interval ) {
-	// 							$option = "bimonthly_plan";
-	// 						} else if( 3 == $interval  ) {
-	// 							$option = "trimonthly_plan";
-	// 						} else if( 6 == $interval  ) {
-	// 							$option = "semiannually_plan";
-	// 						} else {
-	// 							$option = "monthly_plan";
-	// 						}
-	// 						break;
-	// 					case "week":
-	// 						$option = "weekly_plan";
-	// 						break;
-	// 					case "year":
-	// 						$option = "yearly_plan";
-	// 						break;
-	// 				}
-
-	// 			}
-
-	// 			if( "" != $option ) {
-	// 				if( version_compare( WC_VERSION, "3.4.0", ">=") ) {
-	// 					$this->update_option( $option, $reponse[ "code" ] );
-	// 				} else {
-	// 					$this->settings[ $option ] = $reponse[ "code" ];
-	// 					update_option( $this->get_option_key(), apply_filters( "woocommerce_settings_api_sanitized_fields_" . $this->id, $this->settings ), "yes" );
-	// 				}
-	// 			}
-
-	// 			return $reponse[ "code" ];
-
-	// 		}
-
-	// 	}
-
-	// 	return $plan;
-
-	// }
-
-	/**
-	 * Get the corresponding period identifier in Pagseguro.
-	 *
-	 * @param string $period WooCommerce Subscriptions period
-	 * @param int $interval WooCommerce Subscriptions interval
-	 * @return string
-	 */
-	// public function get_pagseguro_period( $period = "month", $interval = 1 ) {
-
-	// 	$interval = intval( $interval );
-
-	// 	switch( $period ) {
-	// 		case "month" :
-	// 			if( 2 == $interval ) {
-	// 				$period = "bimonthly";
-	// 			} else if( 3 == $interval  ) {
-	// 				$period = "trimonthly";
-	// 			} else if( 6 == $interval  ) {
-	// 				$period = "semiannually";
-	// 			} else {
-	// 				$period = "monthly";
-	// 			}
-	// 			break;
-	// 		case "year" :
-	// 			$period = "yearly";
-	// 			break;
-	// 		case "week" :
-	// 			$period = "weekly";
-	// 			break;
-	// 		default:
-	// 			$period = "monthly";
-
-	// 	}
-
-	// 	return strtoupper( $period );
-	// }
-
-	/**
-	 * Get label for Pagseguro period identifier
-	 *
-	 * @param string $pagseguro_period Pagseguro pediod identifier
-	 * @return string
-	 */
-	// public function get_pagseguro_period_label( $pagseguro_period = "MONTLHY" ) {
-	// 	// Register for translation purposes
-	// 	$array = array(
-	// 		"WEEKLY" 		=> __("WEEKLY", "triibo_assinaturas" ),
-	// 		"MONTHLY" 		=> __("MONTHLY", "triibo_assinaturas" ),
-	// 		"BIMONTHLY" 	=> __("BIMONTHLY", "triibo_assinaturas" ),
-	// 		"TRIMONTHLY" 	=> __("TRIMONTHLY", "triibo_assinaturas" ),
-	// 		"SEMIANNUALLY" 	=> __("SEMIANNUALLY", "triibo_assinaturas" ),
-	// 		"YEARLY" 		=> __("YEARLY", "triibo_assinaturas" )
-	// 	);
-
-	// 	if( isset( $array[ $pagseguro_period ] ) ) {
-	// 		$pagseguro_period = $array[ $pagseguro_period ];
-	// 	}
-
-	// 	return $pagseguro_period;
-	// }
-
-	/**
-	 * Include the payment meta data required to process automatic recurring payments so that store managers can
-	 * manually set up automatic recurring payments for a customer via the Edit Subscription screen in Subscriptions v2.0+.
-	 *
-	 * @param array $payment_meta associative array of meta data required for automatic payments
-	 * @param WC_Subscription $subscription An instance of a subscription object
-	 * @return array
-	 */
-	// public function add_subscription_payment_meta( $payment_meta, $subscription )
-	// {
- 	// 	$payment_meta[ $this->id ] = array(
-	// 		"post_meta" => array(
-	// 			"_pagseguro_assinatura" => array(
-	// 				"value" => get_post_meta( $subscription->get_id(), "_triibo_assinatura_payment_id", true ),
-	// 				"label" => "Código do Cliente - Triibo Assinatura ",
-	// 			),
-	// 		),
-	// 	);
-	//
-	// 	return $payment_meta;
-	// }
-
-	/**
-	 * Validate the payment meta data required to process automatic recurring payments so that store managers can.
-	 * manually set up automatic recurring payments for a customer via the Edit Subscription screen in Subscriptions 2.0+.
-	 *
-	 * @param  string $payment_method_id The ID of the payment method to validate
-	 * @param  array  $payment_meta associative array of meta data required for automatic payments
-	 * @throws Exception
-	 */
-	// public function validate_subscription_payment_meta( $payment_method_id, $payment_meta ) {
-	// 	if ( $this->id === $payment_method_id ) {
-	// 		if ( ! isset( $payment_meta[ "post_meta" ][ "_pagseguro_assinatura" ][ "value" ] ) || empty( $payment_meta[ "post_meta" ][ "_pagseguro_assinatura" ][ "value" ] ) ) {
-	// 			throw new Exception( "A "_pagseguro_assinatura" value is required." );
-	// 		}
-	// 	}
-	// }
-
-	/**
-	 * Saves sender hash for later use.
-	 *
-	 * @param int $order_id
-	 * @param string $hash Sender hash generated with Javascript on front end.
-	 * @return null
-	 */
-	// protected function save_sender_hash( $order_id, $hash ) {
-
-	// 	update_post_meta( $order_id, "_sender_hash", sanitize_text_field( $hash ) );
-
-	// 	if ( wcs_order_contains_subscription( $order_id ) ) {
-	// 		$subscriptions = wcs_get_subscriptions_for_order( $order_id );
-	// 	} else if ( wcs_order_contains_renewal( $order_id ) ) {
-	// 		$subscriptions = wcs_get_subscriptions_for_renewal_order( $order_id );
-	// 	} else {
-	// 		$subscriptions = array();
-	// 	}
-
-	// 	foreach( $subscriptions as $subscription ) {
-	// 		update_post_meta( $subscription->get_id(), "_sender_hash", $hash );
-	// 	}
-	// 	return;
-
-	// }
 }
