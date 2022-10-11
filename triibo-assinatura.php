@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:          #Triibo_Assinatura
- * Description:          Triibo pagamento recorrente para WooCommerce
+ * Description:          Triibo pagamento recorrente para WooCommerce. Dependências: Triibo API Services e WooCommerce.
  * Author:               Mateus Costa
  * Author URI:           https://costamateus.com.br/
  * Version:              1.0.0
