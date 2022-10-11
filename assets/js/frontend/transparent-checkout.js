@@ -189,6 +189,8 @@
                         user_id : wc_triibo_assinaturas_params.user_id,
                     },
                     success: function( data ) {
+                        console.log( data );
+
                         if ( data.success )
                         {
                             if ( data.brandInfo.supported )
