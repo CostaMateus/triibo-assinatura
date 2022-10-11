@@ -158,7 +158,9 @@ class WC_Triibo_Assinaturas
 	public function add_btn()
 	{
         $url  = esc_url( admin_url( "admin.php?page=wc-settings&tab=checkout&section=triibo_assinaturas" ) );
-		$link = "<a href='{$url}' >Configurações</a>";
+		$text = __( "Configurações", "triibo_assinaturas" );
+		$link = "<a href='{$url}' >{$text}</a>";
+
 		echo "<p>Triibo Assinaturas | {$link}</p>";
 	}
 }
