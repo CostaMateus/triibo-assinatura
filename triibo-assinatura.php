@@ -39,15 +39,24 @@ class WC_Triibo_Assinaturas
 
 		if ( class_exists( "WC_Subscriptions_Order" ) )
         {
-			add_filter( "woocommerce_payment_gateways", array( $this, "register_gateway" ), 99, 1 );
+			if ( class_exists( "Triibo_Api_Services" ) )
+			{
+				add_filter( "woocommerce_payment_gateways", array( $this, "register_gateway" ), 99, 1 );
 
-			include_once dirname( __FILE__ ) . "/includes/assinaturas-api.php";
-			include_once dirname( __FILE__ ) . "/includes/assinaturas-gateway.php";
+				include_once dirname( __FILE__ ) . "/includes/assinaturas-api.php";
+				include_once dirname( __FILE__ ) . "/includes/assinaturas-gateway.php";
 
-			if ( is_admin() ) add_action( "admin_notices", array( $this, "ecfb_missing_notice" ) );
+				add_filter( "plugin_action_links_" . plugin_basename( __FILE__ ), array( $this, "plugin_action_links" ) );
 
-			// add_filter( "woocommerce_order_actions", 							array( $this, "add_order_meta_box_action"     ), 10, 1 );
-			// add_action( "woocommerce_order_action_wc_pr_force_initial_payment", array( $this, "process_order_meta_box_action" )        );
+				if ( is_admin() ) add_action( "admin_notices", array( $this, "ecfb_missing_notice" ) );
+
+				// add_filter( "woocommerce_order_actions", 							array( $this, "add_order_meta_box_action"     ), 10, 1 );
+				// add_action( "woocommerce_order_action_wc_pr_force_initial_payment", array( $this, "process_order_meta_box_action" )        );
+			}
+			else
+			{
+				add_action( "admin_notices", array( $this, "triibo_api_services_missing_notice" ) );
+			}
 		}
 		else
 		{
@@ -105,50 +114,29 @@ class WC_Triibo_Assinaturas
 		include dirname( __FILE__ ) . "/includes/admin/views/html-notice-missing-woocommerce.php";
 	}
 
-	// /**
-	//  * Add a custom action to order actions select box on edit order page
-	//  * Only added for paid orders that haven't fired this action yet
-	//  *
-	//  * @param array $actions order actions array to display
-	//  * @return array - updated actions
-	//  */
-	// public function add_order_meta_box_action( $actions )
-    // {
-	//     global $theorder;
+	/**
+	 * Triibo-Api-Service missing notice.
+	 */
+	public static function triibo_api_services_missing_notice()
+	{
+		include dirname( __FILE__ ) . "/includes/admin/views/html-notice-missing-triibo_api_services.php";
+	}
 
-	//     // bail if the order has been paid for or this action has been run
-	//     if ( $theorder->is_paid() ||
-    //          ! wcs_order_contains_subscription( $theorder, "parent" ) ||
-    //          "yes" == get_post_meta( $theorder->get_id(), "_pr_processing", true ) ||
-    //          "triibo_assinaturas" != $theorder->get_payment_method() )
-    //     {
-	//         return $actions;
-	//     }
+	/**
+	 * Action links.
+	 *
+	 * @param 	array $links
+	 * @return 	array
+	 */
+	public static function plugin_action_links( $links )
+    {
+        $url            = esc_url( admin_url( "admin.php?page=wc-settings&tab=checkout&section=triibo_assinaturas" ) );
+        $text           = __( "Configurações", "roadpass-gateway" );
+		$plugin_links   = [];
+		$plugin_links[] = "<a href='{$url}' >{$text}</a>";
 
-	//     // add "mark printed" custom action
-	//     $actions["wc_pr_force_initial_payment"] = __( "Forçar pagamento inicial", "triibo_assinaturas" );
-
-	//     return $actions;
-	// }
-
-	// /**
-	//  * Add an order note when custom action is clicked
-	//  * Add a flag on the order to show it's been run
-	//  *
-	//  * @param \WC_Order $order
-	//  */
-	// public function process_order_meta_box_action( $order )
-    // {
-	//     // add the order note
-	//     // translators: Placeholders: %s is a user's display name
-
-	//     $order->add_order_note( __( "Pagamento inicial acionado manualmente.", "triibo_assinaturas" ) );
-
-    //     $pagseguro_recorrente = WC_Triibo_Assinaturas_Gateway::get_instance();
-
-    //     $pagseguro_recorrente->process_initial_payment( $order );
-	// }
-
+		return array_merge( $plugin_links, $links );
+	}
 }
 
 add_action( "plugins_loaded", array( "WC_Triibo_Assinaturas", "get_instance" ), 222 );
