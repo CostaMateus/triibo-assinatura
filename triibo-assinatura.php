@@ -4,7 +4,7 @@
  * Description:          Triibo pagamento recorrente para WooCommerce. Dependências: Triibo API Services e WooCommerce.
  * Author:               Mateus Costa
  * Author URI:           https://costamateus.com.br/
- * Version:              1.0.0
+ * Version:              1.2.0
  * Text Domain:          triibo_assinaturas
  * RequiresPHP:          7.4
  * RequiresWP:           5.9
@@ -24,7 +24,7 @@ class WC_Triibo_Assinaturas
 	 *
 	 * @var string
 	 */
-	const VERSION = "1.0.0";
+	const VERSION = "1.2.0";
 
 	/**
 	 * Instance of this class.
@@ -35,32 +35,32 @@ class WC_Triibo_Assinaturas
 
 	private function __construct()
     {
-		add_action( 'init', array( $this, 'load_init_actions' ) );
+		add_action( "init", array( $this, "load_init_actions" ) );
 
 		if ( class_exists( "WC_Subscriptions_Order" ) )
         {
 			if ( class_exists( "Triibo_Api_Services" ) )
 			{
-				add_filter( "woocommerce_payment_gateways", array( $this, "register_gateway" ), 99, 1 );
+				add_filter( "woocommerce_payment_gateways", [ $this, "register_gateway" ], 99, 1 );
 
 				include_once dirname( __FILE__ ) . "/includes/assinaturas-api.php";
 				include_once dirname( __FILE__ ) . "/includes/assinaturas-gateway.php";
 
-				add_filter( "plugin_action_links_" . plugin_basename( __FILE__ ), array( $this, "plugin_action_links" ) );
+				add_filter( "plugin_action_links_" . plugin_basename( __FILE__ ), [ $this, "plugin_action_links" ] );
 
-				if ( is_admin() ) add_action( "admin_notices", array( $this, "ecfb_missing_notice" ) );
+				if ( is_admin() ) add_action( "admin_notices", [ $this, "ecfb_missing_notice" ] );
 
-				// add_filter( "woocommerce_order_actions", 							array( $this, "add_order_meta_box_action"     ), 10, 1 );
-				// add_action( "woocommerce_order_action_wc_pr_force_initial_payment", array( $this, "process_order_meta_box_action" )        );
+				add_action( "admin_menu",                    [ $this, "add_submenu_page" ], 11 );
+				add_action( "triibo_api_service_add_button", [ $this, "add_btn"          ], 11 );
 			}
 			else
 			{
-				add_action( "admin_notices", array( $this, "triibo_api_services_missing_notice" ) );
+				add_action( "admin_notices", [ $this, "triibo_api_services_missing_notice" ] );
 			}
 		}
 		else
 		{
-			add_action( "admin_notices", array( $this, "woocommerce_missing_notice" ) );
+			add_action( "admin_notices", [ $this, "woocommerce_missing_notice" ] );
 		}
 	}
 
@@ -69,7 +69,7 @@ class WC_Triibo_Assinaturas
 	 */
 	public function load_init_actions()
 	{
-		load_plugin_textdomain( 'triibo_assinaturas' );
+		load_plugin_textdomain( "triibo_assinaturas" );
 	}
 
 	/**
@@ -102,7 +102,7 @@ class WC_Triibo_Assinaturas
 	{
 		if (  ! class_exists( "Extra_Checkout_Fields_For_Brazil" ) )
 		{
-			include dirname( __FILE__ ) . "/includes/admin/views/html-notice-missing-ecfb.php";
+			include_once dirname( __FILE__ ) . "/includes/admin/views/html-notice-missing-ecfb.php";
 		}
 	}
 
@@ -111,7 +111,7 @@ class WC_Triibo_Assinaturas
 	 */
 	public static function woocommerce_missing_notice()
 	{
-		include dirname( __FILE__ ) . "/includes/admin/views/html-notice-missing-woocommerce.php";
+		include_once dirname( __FILE__ ) . "/includes/admin/views/html-notice-missing-woocommerce.php";
 	}
 
 	/**
@@ -119,7 +119,7 @@ class WC_Triibo_Assinaturas
 	 */
 	public static function triibo_api_services_missing_notice()
 	{
-		include dirname( __FILE__ ) . "/includes/admin/views/html-notice-missing-triibo_api_services.php";
+		include_once dirname( __FILE__ ) . "/includes/admin/views/html-notice-missing-triibo_api_services.php";
 	}
 
 	/**
@@ -136,6 +136,30 @@ class WC_Triibo_Assinaturas
 		$plugin_links[] = "<a href='{$url}' >{$text}</a>";
 
 		return array_merge( $plugin_links, $links );
+	}
+
+	public function add_submenu_page()
+	{
+		add_submenu_page(
+			Triibo_Api_Services::get_name(),
+			"Triibo Assinaturas",
+			"Triibo Assinaturas",
+			"manage_options",
+			"triibo_assinaturas-settings",
+			[ $this, "display_admin_menu_settings" ]
+		);
+	}
+
+	public function display_admin_menu_settings()
+	{
+		include_once dirname( __FILE__ ) . "/includes/admin/views/triibo_assinaturas-settings.php";
+	}
+
+	public function add_btn()
+	{
+        $url  = esc_url( admin_url( "admin.php?page=wc-settings&tab=checkout&section=triibo_assinaturas" ) );
+		$link = "<a href='{$url}' >Configurações</a>";
+		echo "<p>Triibo Assinaturas | {$link}</p>";
 	}
 }
 
