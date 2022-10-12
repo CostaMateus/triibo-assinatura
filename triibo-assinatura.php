@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:          #Triibo_Assinatura
- * Description:          Triibo pagamento recorrente para WooCommerce. Dependências: Triibo API Services e WooCommerce.
+ * Description:          Triibo pagamento recorrente para WooCommerce. Dependências: Triibo API Services e WooCommerce Subscription.
  * Author:               Mateus Costa
  * Author URI:           https://costamateus.com.br/
  * Version:              2.0.0
@@ -37,9 +37,9 @@ class WC_Triibo_Assinaturas
     {
 		add_action( "init", array( $this, "load_init_actions" ) );
 
-		if ( class_exists( "WC_Subscriptions_Order" ) )
-        {
-			if ( class_exists( "Triibo_Api_Services" ) )
+		if ( class_exists( "Triibo_Api_Services" ) )
+		{
+			if ( class_exists( "WC_Subscriptions_Order" ) )
 			{
 				add_filter( "woocommerce_payment_gateways", [ $this, "register_gateway" ], 99, 1 );
 
@@ -50,17 +50,18 @@ class WC_Triibo_Assinaturas
 
 				if ( is_admin() ) add_action( "admin_notices", [ $this, "ecfb_missing_notice" ] );
 
-				add_action( "admin_menu",                    [ $this, "add_submenu_page" ], 11 );
-				add_action( "triibo_api_service_add_button", [ $this, "add_btn"          ], 11 );
+				add_action( "admin_menu",                    [ $this, "add_submenu_page"     ], 11 );
+				add_action( "triibo_api_service_add_button", [ $this, "add_btn"              ], 11 );
+				add_action( "rest_api_init",                 [ $this, "register_rest_routes" ]     );
 			}
 			else
 			{
-				add_action( "admin_notices", [ $this, "triibo_api_services_missing_notice" ] );
+				add_action( "admin_notices", [ $this, "woocommerce_missing_notice" ] );
 			}
 		}
 		else
 		{
-			add_action( "admin_notices", [ $this, "woocommerce_missing_notice" ] );
+			add_action( "admin_notices", [ $this, "triibo_api_services_missing_notice" ] );
 		}
 	}
 
@@ -81,7 +82,6 @@ class WC_Triibo_Assinaturas
     {
 		// If the single instance hasn't been set, set it now.
 		if ( null === self::$instance ) self::$instance = new self;
-
 		return self::$instance;
 	}
 
@@ -91,7 +91,6 @@ class WC_Triibo_Assinaturas
 	public function register_gateway( $methods )
     {
 		$methods[] = "WC_Triibo_Assinaturas_Gateway";
-
 		return $methods;
 	}
 
@@ -100,10 +99,8 @@ class WC_Triibo_Assinaturas
 	 */
 	public static function ecfb_missing_notice()
 	{
-		if (  ! class_exists( "Extra_Checkout_Fields_For_Brazil" ) )
-		{
+		if ( !class_exists( "Extra_Checkout_Fields_For_Brazil" ) )
 			include_once dirname( __FILE__ ) . "/includes/admin/views/html-notice-missing-ecfb.php";
-		}
 	}
 
 	/**
@@ -163,6 +160,38 @@ class WC_Triibo_Assinaturas
 
 		echo "<p>Triibo Assinaturas | {$link}</p>";
 	}
+
+    /**
+     * Register REST API routes.
+     */
+    public function register_rest_routes()
+    {
+        foreach ( self::get_rest_namespaces() as $controllers )
+        {
+            foreach ( $controllers as $controller_class )
+            {
+                $controller = new $controller_class();
+                $controller->register_routes();
+            }
+        }
+    }
+
+    /**
+     * Get API namespaces - new namespaces should be registered here.
+     *
+     * @return array List of Namespaces and Main controller classes.
+     */
+    private static function get_rest_namespaces()
+    {
+        return apply_filters(
+            "triibo_assinatura_rest_api_namespaces",
+            [
+                "triibo_assinaturas/v1" => [
+                    "cards" => "WC_Triibo_Assinaturas_API",
+                ]
+            ]
+        );
+    }
 }
 
 add_action( "plugins_loaded", array( "WC_Triibo_Assinaturas", "get_instance" ), 222 );

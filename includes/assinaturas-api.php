@@ -41,8 +41,6 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	{
 		$this->node    = $node;
 		$this->gateway = $gateway;
-
-		add_action( "rest_api_init", [ $this, "register_routes" ] );
 	}
 
 	public function register_routes()
@@ -87,7 +85,6 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 			]
 		);
 	}
-
 
 	/**
 	 * Consulta gateway para gerar token para uso nas chamadas das APIs
