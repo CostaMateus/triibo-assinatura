@@ -41,6 +41,8 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	{
 		$this->node    = $node;
 		$this->gateway = $gateway;
+
+		add_action( "rest_api_init", [ $this, "register_routes" ] );
 	}
 
 	public function register_routes()
@@ -93,7 +95,7 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	 */
 	public function generate_token( $uid, $user_id )
 	{
-		$resp = $this->api->auth( "uid: {$uid}" );
+		$resp = $this->node->auth( "uid: {$uid}" );
 
 		if ( $resp[ "success" ] )
 		{
@@ -229,8 +231,6 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 		$response = $this->node->brand( $token, $params );
 
 		$this->log( json_encode( $response ), true );
-
-		// 4957 6447 0996 7095
 
 		$params["payload"]["cardNumber"] = "****-****-****-" . substr( $data["cardNumber"], -4 );
 		$this->log( "INFO - get_brand : " . json_encode( [ $params, $response ] ) );
