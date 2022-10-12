@@ -52,7 +52,6 @@ class WC_Triibo_Assinaturas
 
 				add_action( "admin_menu",                    [ $this, "add_submenu_page"     ], 11 );
 				add_action( "triibo_api_service_add_button", [ $this, "add_btn"              ], 11 );
-				add_action( "rest_api_init",                 [ $this, "register_rest_routes" ]     );
 			}
 			else
 			{
@@ -161,37 +160,6 @@ class WC_Triibo_Assinaturas
 		echo "<p>Triibo Assinaturas | {$link}</p>";
 	}
 
-    /**
-     * Register REST API routes.
-     */
-    public function register_rest_routes()
-    {
-        foreach ( self::get_rest_namespaces() as $controllers )
-        {
-            foreach ( $controllers as $controller_class )
-            {
-                $controller = new $controller_class();
-                $controller->register_routes();
-            }
-        }
-    }
-
-    /**
-     * Get API namespaces - new namespaces should be registered here.
-     *
-     * @return array List of Namespaces and Main controller classes.
-     */
-    private static function get_rest_namespaces()
-    {
-        return apply_filters(
-            "triibo_assinatura_rest_api_namespaces",
-            [
-                "triibo_assinaturas/v1" => [
-                    "cards" => "WC_Triibo_Assinaturas_API",
-                ]
-            ]
-        );
-    }
 }
 
 add_action( "plugins_loaded", array( "WC_Triibo_Assinaturas", "get_instance" ), 222 );
