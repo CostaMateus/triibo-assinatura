@@ -24,10 +24,7 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	public static function get_instance()
 	{
 		// If the single instance hasn't been set, set it now.
-		if ( null === self::$instance )
-		{
-			self::$instance = new self;
-		}
+		if ( null === self::$instance ) self::$instance = new self;
 
 		return self::$instance;
 	}
