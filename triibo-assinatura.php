@@ -127,7 +127,7 @@ class WC_Triibo_Assinaturas
 	public static function plugin_action_links( $links )
     {
         $url            = esc_url( admin_url( "admin.php?page=wc-settings&tab=checkout&section=triibo_assinaturas" ) );
-        $text           = __( "Configurações", "roadpass-gateway" );
+        $text           = __( "Configurações", "triibo_assinaturas" );
 		$plugin_links   = [];
 		$plugin_links[] = "<a href='{$url}' >{$text}</a>";
 
