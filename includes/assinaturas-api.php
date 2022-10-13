@@ -37,6 +37,9 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	 */
 	protected $node;
 
+	/**
+	 * Construct
+	 */
 	public function __construct( $gateway = null, $node = null )
 	{
 		$this->node    = $node;
@@ -45,6 +48,9 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 		add_action( "rest_api_init", [ $this, "register_routes" ] );
 	}
 
+	/**
+	 * Registra rotas api rest
+	 */
 	public function register_routes()
 	{
 		register_rest_route(
@@ -170,47 +176,38 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 
 		$response = $this->node->brand( $token, $params );
 
-		$params["payload"]["cardNumber"] = "****-****-****-" . substr( $data["cardNumber"], -4 );
-		$this->log( "INFO - get_brand : " . json_encode( [ $params, $response ] ) );
+		// $params[ "payload" ][ "cardNumber" ] = "****-****-****-" . substr( $data[ "cardNumber" ], -4 );
+		// $this->log( "INFO - get_brand : " . json_encode( [ $params, $response ] ) );
 
 		return $response;
 	}
 
-	// /**
-	//  *
-	//  * @return array
-	//  */
-	// public function update_subscription( $data )
-	// {
-	// 	if (
-	// 		(  $this->node->env() && $data->get_header( "x-api-key" ) !== "54723162306C6F6A7052646D4C6170693030" )
-	// 		||
-	// 		( !$this->node->env() && $data->get_header( "x-api-key" ) !== "0303960716C4D6462507A6F6C60326132745" )
-	// 	)
-	// 	{
-	// 		return new WP_REST_Response( [ "error" => "Unauthorized" ], 401 );
-	// 	}
+	/**
+	 * Verifica se cartão já foi tokenizado
+	 *
+	 * @param string $number
+	 * @param string $brand
+	 * @param string $token
+	 * @return array
+	 */
+	private function check_card_token( $number, $brand, $token )
+	{
+		$params   = [
+			"payload" => [
+				"gateway"  => $this->gateway->service,
+				"cardInfo" => [
+					"number" => $number,
+					"brand"  => $brand,
+				]
+			]
+		];
 
-	// 	$order_id = $data[ "order_id" ];
+		$response = $this->node->check_token( $token, $params );
 
-	// 	$order    = wc_get_order( $order_id );
+		$this->log( "INFO - check_card_token : " . json_encode( [ $params, $response ] ) );
 
-	// 	if ( $data[ "approved" ] )
-	// 	{
-	// 		$data = [
-	// 			"id"     => null,
-	// 			"status" => 2,
-	// 		];
-
-	// 		$this->gateway->finalize_order( $order, $data );
-	// 	}
-	// 	else
-	// 	{
-	// 		$order->update_status( "pending" );
-	// 	}
-
-	// 	return;
-	// }
+		return $response;
+	}
 
 	/**
 	 * Tokeniza um cartão
@@ -233,30 +230,11 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 			]
 		];
 
-		return $this->exec( "payments/createToken", $token, $params );
-	}
+		$response = $this->node->create_token( $token, $params );
 
-	/**
-	 * Verifica se cartão já foi tokenizado
-	 *
-	 * @param string $number
-	 * @param string $brand
-	 * @param string $token
-	 * @return array
-	 */
-	private function check_card_token( $number, $brand, $token )
-	{
-		$params = [
-			"payload" => [
-				"gateway"  => $this->gateway->service,
-				"cardInfo" => [
-					"number" => $number,
-					"brand"  => $brand,
-				]
-			]
-		];
+		$this->log( "INFO - create_card_token : " . json_encode( [ $params, $response ] ) );
 
-		return $this->exec( "payments/checkToken", $token, $params );
+		return $response;
 	}
 
 	/**
@@ -275,7 +253,11 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 			]
 		];
 
-		return $this->exec( "payments/deleteToken", $token, $params );
+		$response = $this->node->delete_token( $token, $params );
+
+		$this->log( "INFO - delete_card_token : " . json_encode( [ $params, $response ] ) );
+
+		return $response;
 	}
 
 	/**
@@ -291,7 +273,7 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 		$response = $this->check_card_token( $number, $posted[ "brand" ], $posted[ "token" ] );
 
 		// CARTAO NAO TOKENIZADO
-		if ( ! $response["success"] )
+		if ( !$response[ "success" ] )
 		{
 			$data     = [
 				"holder"         => $posted[ "holder"      ],
@@ -305,7 +287,7 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 			$response = $this->create_card_token( $data, $posted[ "token" ] );
 
 			// FALHA NA CRIACAO DO TOKEN DO CARTAO
-			if ( ! $response[ "success" ] )
+			if ( !$response[ "success" ] )
 			{
 				$error = "Falha ao consultar token.";
 				$this->log( "ERROR - create_card_token : " . json_encode( [ $error, $response ] ), true );
@@ -317,13 +299,13 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 			}
 
 			$created    = true;
-			$tokenIndex = $response[ "tokenInfo" ][ "index" ];
+			$tokenIndex = $response[ "data" ][ "tokenInfo" ][ "index" ];
 		}
 		// CARTAO JA TOKENIZADO
 		else
 		{
 			$created    = false;
-			$tokenIndex = $response[ "tokenInfo" ][ "index" ];
+			$tokenIndex = $response[ "data" ][ "tokenInfo" ][ "index" ];
 		}
 
 		return [
@@ -341,11 +323,6 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	 */
 	private function do_payment( $data, $token )
 	{
-		// numero de teste
-		// 4929 7008 9247 1744
-		// 4024 0071 2681 6130
-		// 4024 0071 1511 4562
-
 		$params = [
 			"payload" => [
 				"gateway" => $this->gateway->service,
@@ -361,7 +338,47 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 			]
 		];
 
-		return $this->exec( "payments/doPayment", $token, $params );
+		$response = $this->node->payment( $token, $params );
+
+		$this->log( "INFO - do_payment : " . json_encode( [ $params, $response ] ) );
+
+		return $response;
+	}
+
+	/**
+	 *
+	 * @return array
+	 */
+	public function update_subscription( $data )
+	{
+		if (
+			(  $this->node->env() && $data->get_header( "x-api-key" ) !== "54723162306C6F6A7052646D4C6170693030" )
+			||
+			( !$this->node->env() && $data->get_header( "x-api-key" ) !== "0303960716C4D6462507A6F6C60326132745" )
+		)
+		{
+			return new WP_REST_Response( [ "error" => "Unauthorized" ], 401 );
+		}
+
+		$order_id = $data[ "order_id" ];
+
+		$order    = wc_get_order( $order_id );
+
+		if ( $data[ "approved" ] )
+		{
+			$data = [
+				"id"     => null,
+				"status" => 2,
+			];
+
+			$this->gateway->finalize_order( $order, $data );
+		}
+		else
+		{
+			$order->update_status( "pending" );
+		}
+
+		return;
 	}
 
 	/**
@@ -383,7 +400,7 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 			$subscription = wcs_get_subscription( wcs_get_objects_property( $order, "id" ) );
 			$status_card  = $this->status_card( $posted );
 
-			if ( ! $status_card[ "success" ] )
+			if ( !$status_card[ "success" ] )
 			{
 				$this->log( "ERROR - update_payment_method : SUBS " . $subscription->get_id(), true );
 
@@ -422,11 +439,11 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 			$subscription = array_pop( $subscriptions );
 		}
 
-		if ( $order_contains_failed_renewal || ! empty( $subscription ) )
+		if ( $order_contains_failed_renewal || !empty( $subscription ) )
 		{
 			$status_card = $this->status_card( $posted );
 
-			if ( ! $status_card[ "success" ] ) return $status_card;
+			if ( !$status_card[ "success" ] ) return $status_card;
 
 			// PROCESSAMENTO DO PAGAMENTO
 			if ( $order->get_total() > 0 )
@@ -436,7 +453,7 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 
 				$total = intval( strval( $order->get_total() * 100 ) ); // em centavos
 				$name  = $order->get_user()->get( "display_name" ) ?: $posted[ "holder" ];
-				$doc   = $order->get_meta( "_billing_cpf", true )  ?: $posted[ "cpf" ];
+				$doc   = $order->get_meta( "_billing_cpf", true  ) ?: $posted[ "cpf"    ];
 				$phone = "+" . preg_replace( "/\D/", "", $posted[ "phone" ] );
 
 				$data  = [
@@ -451,23 +468,27 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 
 				// EXECUTANDO PAGAMENTO
 				$response = $this->do_payment( $data, $posted[ "token" ] );
-				$response[ "paymentInfo" ][ "token" ] = $status_card[ "tokenIndex" ];
+				$data     = $status_card[ "tokenIndex" ];
+
+				$response[ "data" ][ "paymentInfo" ][ "token" ] = $data;
 			}
 			else
 			{
 				// TESTE GRATUITO
 				$response = [
-					"success"     => true,
-					"paymentInfo" => [
-						"id"      => null,
-						"status"  => 2,
-						"message" => "Free Trial"
+					"success" => true,
+					"data"    => [
+						"paymentInfo" => [
+							"id"      => null,
+							"status"  => 2,
+							"message" => "Free Trial"
+						]
 					]
 				];
 			}
 
 			// FALHA NO PAGAMENTO
-			if ( ! $response[ "success" ] )
+			if ( !$response[ "success" ] )
 			{
 				$error = "Ocorreu um erro ao processar seu pagamento, tente novamente.";
 				$this->log( "ERROR - do_payment : " . json_encode( [ $error, $response, $data ] ), true );
@@ -484,7 +505,7 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 					"error"   => "$error (cod EP3)"
 				];
 			}
-			else if ( in_array( $response[ "paymentInfo" ][ "status" ], [ 3, 10, 11, 13 ] ) )
+			else if ( in_array( $response[ "data" ][ "paymentInfo" ][ "status" ], [ 3, 10, 11, 13 ] ) )
 			{
 				// failure
 				// 3  : 'Denied',           // Pagamento negado por Autorizador.
@@ -514,7 +535,7 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 			return [
 				"success" => true,
 				"message" => "Pagamento processado com sucesso.",
-				"data"    => $response[ "paymentInfo" ]
+				"data"    => $response[ "data" ][ "paymentInfo" ]
 			];
 		}
 
@@ -569,10 +590,10 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 
 		// EXECUTANDO PAGAMENTO
 		$response = $this->do_payment( $data, $token );
-		$response[ "paymentInfo" ][ "token" ] = $paymentToken;
+		$response[ "data" ][ "paymentInfo" ][ "token" ] = $paymentToken;
 
 		// FALHA NO PAGAMENTO
-		if ( ! $response[ "success" ] )
+		if ( !$response[ "success" ] )
 		{
 			$error = "Ocorreu um erro ao processar seu pagamento, tente novamente.";
 			$this->log( "ERROR - do_payment renewal : " . json_encode( [ $error, $response, $data ] ), true );
@@ -583,7 +604,7 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 				"full_error" => $response,
 			];
 		}
-		else if ( in_array( $response[ "paymentInfo" ][ "status" ], [ 3, 10, 11, 13 ] ) )
+		else if ( in_array( $response[ "data" ][ "paymentInfo" ][ "status" ], [ 3, 10, 11, 13 ] ) )
 		{
 			// failure
 			// 3  : 'Denied',           // Pagamento negado por Autorizador.
@@ -607,7 +628,7 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 		return [
 			"success" => true,
 			"message" => "Pagamento processado com sucesso.",
-			"data"    => $response[ "paymentInfo" ]
+			"data"    => $response[ "data" ][ "paymentInfo" ]
 		];
 	}
 
