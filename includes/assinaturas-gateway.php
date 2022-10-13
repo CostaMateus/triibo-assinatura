@@ -250,8 +250,7 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 		$this->api->validate_token( $user->ID );
 
-		// $url = ( $this->node->env() ) ? "https://dev-marketplace.triibo.com.br/wp-json/triibo_assinaturas/v1" : "https://marketplace.triibo.com.br/wp-json/triibo_assinaturas/v1";
-		$url = "http://localhost:8000/wp-json/triibo_assinaturas/v1";
+		$url = ( $this->node->env() ) ? "https://dev-marketplace.triibo.com.br/wp-json/triibo_assinaturas/v1" : "https://marketplace.triibo.com.br/wp-json/triibo_assinaturas/v1";
 
 		wp_localize_script(
 			"triibo_assinaturas_checkout",
