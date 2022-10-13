@@ -139,7 +139,7 @@ class WC_Triibo_Assinaturas
 		add_submenu_page(
 			Triibo_Api_Services::get_name(),
 			"Triibo Assinaturas",
-			"Triibo Assinaturas",
+			"Assinaturas",
 			"manage_options",
 			"triibo_assinaturas-settings",
 			[ $this, "display_admin_menu_settings" ]
