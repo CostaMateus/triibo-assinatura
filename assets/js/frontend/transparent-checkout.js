@@ -188,11 +188,11 @@
                     data : {
                         user_id : wc_triibo_assinaturas_params.user_id,
                     },
-                    success: function( data ) {
-                        console.log( data );
-
-                        if ( data.success )
+                    success: function( response ) {
+                        if ( response.success )
                         {
+                            let data = response.data;
+
                             if ( data.brandInfo.supported )
                             {
                                 $( "body" ).trigger( "triibo_assinaturas_credit_card_brand", data.brandInfo.brand );
