@@ -38,15 +38,15 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 		if ( class_exists( "WC_Subscriptions_Order" ) )
 		{
-			$this->id                 = "triibo_assinaturas";
-			$this->icon               = apply_filters( "woocommerce_triibo_assinaturas_icon", plugins_url( "assets/images/triibo-25-cor-completo.png", plugin_dir_path( __FILE__ ) ) );
+			$this->id                 = WC_Triibo_Assinaturas::DOMAIN;
+			$this->icon               = apply_filters( "woocommerce_" . WC_Triibo_Assinaturas::DOMAIN . "_icon", plugins_url( "assets/images/triibo-25-cor-completo.png", plugin_dir_path( __FILE__ ) ) );
 
-			$this->method_title       = __( "Triibo Recorrente",                                         "triibo_assinaturas" );
-			$this->method_description = __( "Pagamentos com cartão de crédito usando a Triibo Gateway.", "triibo_assinaturas" );
-			$this->order_button_text  = __( "Prossiga para o pagamento",                                 "triibo_assinaturas" );
+			$this->method_title       = __( "Triibo Recorrente",                                         WC_Triibo_Assinaturas::DOMAIN );
+			$this->method_description = __( "Pagamentos com cartão de crédito usando a Triibo Gateway.", WC_Triibo_Assinaturas::DOMAIN );
+			$this->order_button_text  = __( "Prossiga para o pagamento",                                 WC_Triibo_Assinaturas::DOMAIN );
 
 			// Subscriptions
-			$this->supports           = apply_filters( "triibo_assinaturas_supports_array", [
+			$this->supports           = apply_filters( WC_Triibo_Assinaturas::DOMAIN . "_supports_array", [
 				"subscriptions",
 				"subscription_cancellation",
 				"subscription_suspension",
@@ -71,7 +71,7 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 			$this->service     = $this->get_option( "service"     );
 			$this->debug       = $this->get_option( "debug"       );
 
-			$this->cc_hide_cpf_field = apply_filters( "triibo_assinaturas_hide_cpf_field", false );
+			$this->cc_hide_cpf_field = apply_filters( WC_Triibo_Assinaturas::DOMAIN . "_hide_cpf_field", false );
 
 			// Active logs.
 			if ( $this->debug == "yes" )
@@ -91,7 +91,7 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	 */
 	public function admin_options()
 	{
-		wp_enqueue_script( "triibo_assinaturas_admin", plugins_url( "assets/js/admin/admin.js", plugin_dir_path( __FILE__ ) ), [ "jquery" ], WC_Triibo_Assinaturas::VERSION, true );
+		wp_enqueue_script( WC_Triibo_Assinaturas::DOMAIN . "_admin", plugins_url( "assets/js/admin/admin.js", plugin_dir_path( __FILE__ ) ), [ "jquery" ], WC_Triibo_Assinaturas::VERSION, true );
 
 		include dirname( __FILE__ ) . "/admin/views/html-admin-page.php";
 	}
@@ -154,7 +154,7 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 		$sanitize  = sanitize_file_name( wp_hash( $this->id ) );
 		$admin_url = "admin.php?page=wc-status&tab=logs&log_file=$esc_attr-$date-$sanitize.log";
 		$link      = esc_url( admin_url( $admin_url ) );
-		$text      = __( "System Status &gt; Logs", "triibo_assinaturas" );
+		$text      = __( "System Status &gt; Logs", WC_Triibo_Assinaturas::DOMAIN );
 
 		return "<a href='$link' target='_blank' >$text</a>";
 	}
@@ -168,7 +168,7 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	{
 		$triibo = Triibo_Api_Services::get_name( true );
         $url    = esc_url( admin_url( "admin.php?page={$triibo}" ) );
-		$text   = __( "clicando aqui", "triibo_assinaturas" );
+		$text   = __( "clicando aqui", WC_Triibo_Assinaturas::DOMAIN );
 
 		return "<a href='{$url}' target='_blank' >{$text}</a>";
 	}
@@ -183,49 +183,49 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 			// ativar / desativar meio de pagamento
 			"enabled"         => [
 				"type"        => "checkbox",
-				"title"       => __( "Ativar / Desativar",       "triibo_assinaturas" ),
-				"label"       => __( "Ativar Triibo Recorrente", "triibo_assinaturas" ),
+				"title"       => __( "Ativar / Desativar",                                        WC_Triibo_Assinaturas::DOMAIN ),
+				"label"       => __( "Ativar Triibo Recorrente",                                  WC_Triibo_Assinaturas::DOMAIN ),
 				"default"     => "no",
 			],
 
 			"title"           => [
 				"type"        => "text",
-				"title"       => __( "Título",                                                        "triibo_assinaturas" ),
-				"description" => __( "Controla o título que o usuário vê durante o checkout.",        "triibo_assinaturas" ),
-				"default"     => __( "Triibo Recorrente",                                             "triibo_assinaturas" ),
+				"title"       => __( "Título",                                                    WC_Triibo_Assinaturas::DOMAIN ),
+				"description" => __( "Controla o título que o usuário vê durante o checkout.",    WC_Triibo_Assinaturas::DOMAIN ),
+				"default"     => __( "Triibo Recorrente",                                         WC_Triibo_Assinaturas::DOMAIN ),
 			],
 			"description"     => [
 				"type"        => "textarea",
-				"title"       => __( "Descrição",                                                     "triibo_assinaturas" ),
-				"description" => __( "Controla a descrição que o usuário vê durante o checkout.",     "triibo_assinaturas" ),
-				"default"     => __( "Pague com a Triibo",                                            "triibo_assinaturas" ),
+				"title"       => __( "Descrição",                                                 WC_Triibo_Assinaturas::DOMAIN ),
+				"description" => __( "Controla a descrição que o usuário vê durante o checkout.", WC_Triibo_Assinaturas::DOMAIN ),
+				"default"     => __( "Pague com a Triibo",                                        WC_Triibo_Assinaturas::DOMAIN ),
 			],
 
 			"service"         => [
 				"type"        => "select",
-				"title"       => __( "Serviço de pagamento",                                          "triibo_assinaturas" ),
-				"description" => __( "Escolha qual será o serviço de pagamento padrão.",              "triibo_assinaturas" ),
+				"title"       => __( "Serviço de pagamento",                                      WC_Triibo_Assinaturas::DOMAIN ),
+				"description" => __( "Escolha qual será o serviço de pagamento padrão.",          WC_Triibo_Assinaturas::DOMAIN ),
 				"default"     => "cielo",
 				"class"       => "wc-enhanced-select",
 				"options"     => [
-					"cielo"     => __( "Cielo",     "triibo_assinaturas" ),
-					// "pagseguro" => __( "PagSeguro", "triibo_assinaturas" ),
-					// "value"     => __( "Name",      "triibo_assinaturas" ),
+					"cielo"     => __( "Cielo", WC_Triibo_Assinaturas::DOMAIN ),
+					// "pagseguro" => __( "PagSeguro", WC_Triibo_Assinaturas::DOMAIN ),
+					// "value"     => __( "Name",      WC_Triibo_Assinaturas::DOMAIN ),
 				],
 			],
 
 			"debug"           => [
 				"type"        => "checkbox",
-				"title"       => __( "Debug Log",                                                     "triibo_assinaturas" ),
-				"label"       => __( "Ativar logger",                                                 "triibo_assinaturas" ),
-				"description" => sprintf( __( "Registrar log de eventos, %s", "triibo_assinaturas" ), $this->get_log_view() ),
+				"title"       => __( "Debug Log",                                                 WC_Triibo_Assinaturas::DOMAIN ),
+				"label"       => __( "Ativar logger",                                             WC_Triibo_Assinaturas::DOMAIN ),
+				"description" => sprintf( __( "Registrar log de eventos, %s", WC_Triibo_Assinaturas::DOMAIN ), $this->get_log_view() ),
 				"default"     => "yes",
 			],
 
 			"configs" => [
 				"type"        => "title",
-				"title"       => __( "Chaves de API",                                                 "triibo_assinaturas" ),
-				"description" => sprintf( __( "Acessar configurações globais %s.", "triibo_assinaturas" ), $this->get_global_config() ),
+				"title"       => __( "Chaves de API",                                             WC_Triibo_Assinaturas::DOMAIN ),
+				"description" => sprintf( __( "Acessar configurações globais %s.", WC_Triibo_Assinaturas::DOMAIN ), $this->get_global_config() ),
 			],
 		];
 	}
@@ -243,39 +243,41 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 		if ( false === $load_scripts ) return;
 
-		wp_enqueue_style(  "triibo_assinaturas_checkout", plugins_url( "assets/css/frontend/transparent-checkout.css", plugin_dir_path( __FILE__ ) ), [],                                                                          WC_Triibo_Assinaturas::VERSION       );
-		wp_enqueue_script( "triibo_assinaturas_checkout", plugins_url( "assets/js/frontend/transparent-checkout.js",   plugin_dir_path( __FILE__ ) ), [ "json2", "jquery", "woocommerce-extra-checkout-fields-for-brazil-front" ], WC_Triibo_Assinaturas::VERSION, true );
+		wp_enqueue_style(  WC_Triibo_Assinaturas::DOMAIN . "_checkout", plugins_url( "assets/css/frontend/transparent-checkout.css", plugin_dir_path( __FILE__ ) ), [],                                                                          WC_Triibo_Assinaturas::VERSION       );
+		wp_enqueue_script( WC_Triibo_Assinaturas::DOMAIN . "_checkout", plugins_url( "assets/js/frontend/transparent-checkout.js",   plugin_dir_path( __FILE__ ) ), [ "json2", "jquery", "woocommerce-extra-checkout-fields-for-brazil-front" ], WC_Triibo_Assinaturas::VERSION, true );
 
         $user = wp_get_current_user();
 
 		$this->api->validate_token( $user->ID );
 
-		$url = ( $this->node->env() ) ? "https://dev-marketplace.triibo.com.br/wp-json/triibo_assinaturas/v1" : "https://marketplace.triibo.com.br/wp-json/triibo_assinaturas/v1";
+		$url = ( $this->node->env() )
+				? "https://dev-marketplace.triibo.com.br/wp-json/" . WC_Triibo_Assinaturas::DOMAIN . "/v1"
+				: "https://marketplace.triibo.com.br/wp-json/" . WC_Triibo_Assinaturas::DOMAIN . "/v1";
 
 		wp_localize_script(
-			"triibo_assinaturas_checkout",
-			"wc_triibo_assinaturas_params",
+			WC_Triibo_Assinaturas::DOMAIN . "_checkout",
+			"wc_" . WC_Triibo_Assinaturas::DOMAIN . "_params",
 			[
 				"user_id"  => $user->ID,
 				"base_url" => $url,
 				"messages" => [
-					"session_error"      => __( "Ocorreu um error. Por favor, atualize a página.",                       "triibo_assinaturas" ),
+					"session_error"      => __( "Ocorreu um error. Por favor, atualize a página.",                       WC_Triibo_Assinaturas::DOMAIN ),
 
-					"unsupported_card"   => __( "Essa bandeira não é suportada pelo Triibo Recorrente atualmente.",      "triibo_assinaturas" ),
+					"unsupported_card"   => __( "Essa bandeira não é suportada pelo Triibo Recorrente atualmente.",      WC_Triibo_Assinaturas::DOMAIN ),
 
-					"invalid_card"       => __( "O número do cartão de crédito é inválido.",                             "triibo_assinaturas" ),
-					"invalid_expiry"     => __( "A data de expiração é inválida, por favor, utilize o formato MM / AA.", "triibo_assinaturas" ),
-					"invalid_cvv"        => __( "O código do cartão é inválido.",                                        "triibo_assinaturas" ),
+					"invalid_card"       => __( "O número do cartão de crédito é inválido.",                             WC_Triibo_Assinaturas::DOMAIN ),
+					"invalid_expiry"     => __( "A data de expiração é inválida, por favor, utilize o formato MM / AA.", WC_Triibo_Assinaturas::DOMAIN ),
+					"invalid_cvv"        => __( "O código do cartão é inválido.",                                        WC_Triibo_Assinaturas::DOMAIN ),
 
-					"invalid_holder"     => __( "Informe o nome do titular do cartão.",                                  "triibo_assinaturas" ),
-					"invalid_h_cpf"      => __( "Informe o CPF do titular do cartão.",                                   "triibo_assinaturas" ),
+					"invalid_holder"     => __( "Informe o nome do titular do cartão.",                                  WC_Triibo_Assinaturas::DOMAIN ),
+					"invalid_h_cpf"      => __( "Informe o CPF do titular do cartão.",                                   WC_Triibo_Assinaturas::DOMAIN ),
 
-					"expired_date"       => __( "Por favor, verifique a data de expiração e utilize o formato MM / AA.", "triibo_assinaturas" ),
+					"expired_date"       => __( "Por favor, verifique a data de expiração e utilize o formato MM / AA.", WC_Triibo_Assinaturas::DOMAIN ),
 
-					"empty_installments" => __( "Selecione o número de parcelas.",                                       "triibo_assinaturas" ),
-					"interest_free"      => __( "sem juros",                                                             "triibo_assinaturas" ),
+					"empty_installments" => __( "Selecione o número de parcelas.",                                       WC_Triibo_Assinaturas::DOMAIN ),
+					"interest_free"      => __( "sem juros",                                                             WC_Triibo_Assinaturas::DOMAIN ),
 
-					"general_error"      => __( "Não foi possível processar os dados do seu cartão de crédito, por favor, tente novamente ou entre em contato para receber ajuda.", "triibo_assinaturas" ),
+					"general_error"      => __( "Não foi possível processar os dados do seu cartão de crédito, por favor, tente novamente ou entre em contato para receber ajuda.", WC_Triibo_Assinaturas::DOMAIN ),
 				]
 			]
 		);
@@ -292,22 +294,22 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 			$fields[ "card-expiry-field" ] =
 			"<p class='form-row form-row-first'>
-				<label for='" . $id . "-card-expiry' >"      . esc_html__( "Validade (MM/YY)", "triibo_assinaturas" ) . "&nbsp;<span class='required' >*</span></label>
-				<input id='"  . $id . "-card-expiry' class='input-text wc-credit-card-form-card-expiry' inputmode='numeric' autocomplete='cc-exp' autocorrect='no' autocapitalize='no' spellcheck='no' type='tel' placeholder='" . esc_attr__( "MM / YY", "triibo_assinaturas" ) . "' " . $this->field_name( "card-expiry" ) . " />
+				<label for='" . $id . "-card-expiry' >"      . esc_html__( "Validade (MM/YY)", WC_Triibo_Assinaturas::DOMAIN ) . "&nbsp;<span class='required' >*</span></label>
+				<input id='"  . $id . "-card-expiry' class='input-text wc-credit-card-form-card-expiry' inputmode='numeric' autocomplete='cc-exp' autocorrect='no' autocapitalize='no' spellcheck='no' type='tel' placeholder='" . esc_attr__( "MM / YY", WC_Triibo_Assinaturas::DOMAIN ) . "' " . $this->field_name( "card-expiry" ) . " />
 			</p>";
 
 			$fields[ "card-name" ] =
 			"<p class='form-row form-row-wide'>
-				<label for='" . $id . "-card-holder-name' >" . esc_html__( "Nome do titular", "triibo_assinaturas" ) . "&nbsp;<span class='required' >*</span></label>
-				<input id='"  . $id . "-card-holder-name' class='input-text wc-credit-card-form_card_holder_name' type='text' placeholder='" . esc_attr__( "Informe o nome do titular", "triibo_assinaturas" ) . "' " . $this->field_name( "card-holder-name" ) . " />
+				<label for='" . $id . "-card-holder-name' >" . esc_html__( "Nome do titular", WC_Triibo_Assinaturas::DOMAIN ) . "&nbsp;<span class='required' >*</span></label>
+				<input id='"  . $id . "-card-holder-name' class='input-text wc-credit-card-form_card_holder_name' type='text' placeholder='" . esc_attr__( "Informe o nome do titular", WC_Triibo_Assinaturas::DOMAIN ) . "' " . $this->field_name( "card-holder-name" ) . " />
 			</p>";
 
 			if ( false === $this->cc_hide_cpf_field || is_wc_endpoint_url( "order-pay" ) )
 			{
 				$fields[ "card-cpf" ] =
 				"<p class='form-row form-row-wide'>
-					<label for='" . $id . "-card-holder-cpf' >" . esc_html__( "CPF do titular", "triibo_assinaturas" ) . "&nbsp;<span class='required'>*</span></label>
-					<input id='"  . $id . "-card-holder-cpf' class='input-text wc-credit-card-form_card_holder_cpf' type='tel' placeholder='" . esc_attr__( "000.000.000-00", "triibo_assinaturas" ) . "' " . $this->field_name( "card-holder-cpf" ) . "/>
+					<label for='" . $id . "-card-holder-cpf' >" . esc_html__( "CPF do titular", WC_Triibo_Assinaturas::DOMAIN ) . "&nbsp;<span class='required'>*</span></label>
+					<input id='"  . $id . "-card-holder-cpf' class='input-text wc-credit-card-form_card_holder_cpf' type='tel' placeholder='" . esc_attr__( "000.000.000-00", WC_Triibo_Assinaturas::DOMAIN ) . "' " . $this->field_name( "card-holder-cpf" ) . "/>
 				</p>";
 			}
 		}
@@ -325,7 +327,7 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 			|| wcs_cart_contains_renewal()
 			|| WC_Subscriptions_Change_Payment_Gateway::$is_request_to_change_payment )
 		{
-			$description = ( $this->node->env() ) ? $this->get_description() . __( " - HOMOL ativado.", "triibo_assinaturas" ) : $this->get_description();
+			$description = ( $this->node->env() ) ? $this->get_description() . __( " - HOMOL ativado.", WC_Triibo_Assinaturas::DOMAIN ) : $this->get_description();
 
 			if ( $description ) echo wpautop( wptexturize( trim( $description ) ) );
 
@@ -361,15 +363,15 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 		$cardInfo  = [
 			"token"       => $token,
 
-			"holder"      => WC()->checkout()->get_value( "triibo_assinaturas-holder"      ),
-			"cpf"         => WC()->checkout()->get_value( "triibo_assinaturas-h_cpf"       ),
+			"holder"      => WC()->checkout()->get_value( WC_Triibo_Assinaturas::DOMAIN . "-holder"      ),
+			"cpf"         => WC()->checkout()->get_value( WC_Triibo_Assinaturas::DOMAIN . "-h_cpf"       ),
 			"phone"       => $triibo_id,
 
-			"card_number" => WC()->checkout()->get_value( "triibo_assinaturas-card_number" ),
-			"cvc"         => WC()->checkout()->get_value( "triibo_assinaturas-cvc"         ),
-			"month"       => WC()->checkout()->get_value( "triibo_assinaturas-exp_month"   ),
-			"year"        => WC()->checkout()->get_value( "triibo_assinaturas-exp_year"    ),
-			"brand"       => WC()->checkout()->get_value( "triibo_assinaturas-brand"       ),
+			"card_number" => WC()->checkout()->get_value( WC_Triibo_Assinaturas::DOMAIN . "-card_number" ),
+			"cvc"         => WC()->checkout()->get_value( WC_Triibo_Assinaturas::DOMAIN . "-cvc"         ),
+			"month"       => WC()->checkout()->get_value( WC_Triibo_Assinaturas::DOMAIN . "-exp_month"   ),
+			"year"        => WC()->checkout()->get_value( WC_Triibo_Assinaturas::DOMAIN . "-exp_year"    ),
+			"brand"       => WC()->checkout()->get_value( WC_Triibo_Assinaturas::DOMAIN . "-brand"       ),
 		];
 
 		$response = $this->api->do_subscription_request( $order, $cardInfo );

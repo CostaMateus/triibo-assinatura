@@ -26,6 +26,8 @@ class WC_Triibo_Assinaturas
 	 */
 	const VERSION = "2.0.0";
 
+	const DOMAIN  = "triibo_assinaturas";
+
 	/**
 	 * Instance of this class.
 	 *
@@ -35,8 +37,6 @@ class WC_Triibo_Assinaturas
 
 	private function __construct()
     {
-		add_action( "init", array( $this, "load_init_actions" ) );
-
 		if ( class_exists( "Triibo_Api_Services" ) )
 		{
 			if ( class_exists( "WC_Subscriptions_Order" ) )
@@ -62,14 +62,6 @@ class WC_Triibo_Assinaturas
 		{
 			add_action( "admin_notices", [ $this, "triibo_api_services_missing_notice" ] );
 		}
-	}
-
-	/**
-	 * Load the plugin init actions.
-	 */
-	public function load_init_actions()
-	{
-		load_plugin_textdomain( "triibo_assinaturas" );
 	}
 
 	/**
@@ -126,8 +118,8 @@ class WC_Triibo_Assinaturas
 	 */
 	public static function plugin_action_links( $links )
     {
-        $url            = esc_url( admin_url( "admin.php?page=wc-settings&tab=checkout&section=triibo_assinaturas" ) );
-        $text           = __( "Configurações", "triibo_assinaturas" );
+        $url            = esc_url( admin_url( "admin.php?page=wc-settings&tab=checkout&section=" . self::DOMAIN ) );
+        $text           = __( "Configurações", self::DOMAIN );
 		$plugin_links   = [];
 		$plugin_links[] = "<a href='{$url}' >{$text}</a>";
 
@@ -141,20 +133,20 @@ class WC_Triibo_Assinaturas
 			"Triibo Assinaturas",
 			"Assinaturas",
 			"manage_options",
-			"triibo_assinaturas-settings",
+			self::DOMAIN . "-settings",
 			[ $this, "display_admin_menu_settings" ]
 		);
 	}
 
 	public function display_admin_menu_settings()
 	{
-		include_once dirname( __FILE__ ) . "/includes/admin/views/triibo_assinaturas-settings.php";
+		include_once dirname( __FILE__ ) . "/includes/admin/views/" . self::DOMAIN . "-settings.php";
 	}
 
 	public function add_btn()
 	{
-        $url  = esc_url( admin_url( "admin.php?page=wc-settings&tab=checkout&section=triibo_assinaturas" ) );
-		$text = __( "Configurações", "triibo_assinaturas" );
+        $url  = esc_url( admin_url( "admin.php?page=wc-settings&tab=checkout&section=" . self::DOMAIN ) );
+		$text = __( "Configurações", self::DOMAIN );
 		$link = "<a href='{$url}' >{$text}</a>";
 
 		echo "<p>Triibo Assinaturas | {$link}</p>";

@@ -14,7 +14,7 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	 *
 	 * @var string
 	 */
-	protected $namespace = "triibo_assinaturas/v1";
+	protected $namespace = WC_Triibo_Assinaturas::DOMAIN . "/v1";
 
 	/**
 	 * Stores the request.
@@ -544,7 +544,7 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 		// Return error message.
 		return [
 			"success" => false,
-			"error"   => "<strong>Triibo Recorrente</strong>: " . __( "Ocorreu um erro ao processar seu pagamento, tente novamente. Ou entre em contato conosco para obter assistência. (cod EP99)", "triibo_assinaturas" ),
+			"error"   => "<strong>Triibo Recorrente</strong>: " . __( "Ocorreu um erro ao processar seu pagamento, tente novamente. Ou entre em contato conosco para obter assistência. (cod EP99)", WC_Triibo_Assinaturas::DOMAIN ),
 		];
 	}
 

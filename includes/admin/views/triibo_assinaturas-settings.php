@@ -13,8 +13,8 @@
 <div class="wrap">
 	<h2>Triibo Assinaturas</h2>
     <?php
-        $url  = esc_url( admin_url( "admin.php?page=wc-settings&tab=checkout&section=triibo_assinaturas" ) );
-        $text = __( "Configurações", "triibo_assinaturas" );
+        $url  = esc_url( admin_url( "admin.php?page=wc-settings&tab=checkout&section=" . WC_Triibo_Assinaturas::DOMAIN ) );
+        $text = __( "Configurações", WC_Triibo_Assinaturas::DOMAIN );
         $link = "<a href='{$url}' >{$text}</a>";
 
         echo "<p>{$link}</p>";
