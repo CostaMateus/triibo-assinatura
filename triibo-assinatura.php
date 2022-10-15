@@ -146,7 +146,7 @@ class WC_Triibo_Assinaturas
 	public function add_btn()
 	{
         $url  = esc_url( admin_url( "admin.php?page=wc-settings&tab=checkout&section=" . self::DOMAIN ) );
-		$text = __( "Configurações", self::DOMAIN );
+		$text = __( "WC Configurações", self::DOMAIN );
 		$link = "<a href='{$url}' >{$text}</a>";
 
 		echo "<p>Triibo Assinaturas | {$link}</p>";
