@@ -50,8 +50,9 @@ class WC_Triibo_Assinaturas
 
 				if ( is_admin() ) add_action( "admin_notices", [ $this, "ecfb_missing_notice" ] );
 
-				add_action( "admin_menu",                    [ $this, "add_submenu_page"     ], 11 );
-				add_action( "triibo_api_service_add_button", [ $this, "add_btn"              ], 11 );
+				add_action( "admin_menu",                          [ $this, "add_submenu_page"    ], 11 );
+				add_action( "triibo_api_service_add_button",       [ $this, "add_btn"             ], 11 );
+				add_action( "triibo_api_service_list_plugin_node", [ $this, "add_info_dependency" ],    );
 			}
 			else
 			{
@@ -150,6 +151,11 @@ class WC_Triibo_Assinaturas
 		$link = "<a href='{$url}' >{$text}</a>";
 
 		echo "<p>Triibo Assinaturas | {$link}</p>";
+	}
+
+	public function add_info_dependency()
+	{
+		echo "<p> - Triibo Assinaturas</p>";
 	}
 
 }
