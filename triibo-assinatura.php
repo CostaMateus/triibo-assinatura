@@ -26,6 +26,11 @@ class WC_Triibo_Assinaturas
 	 */
 	const VERSION = "2.0.0";
 
+	/**
+	 * Plugin domain.
+	 *
+	 * @var string
+	 */
 	const DOMAIN  = "triibo_assinaturas";
 
 	/**
