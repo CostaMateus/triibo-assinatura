@@ -58,6 +58,9 @@ class WC_Triibo_Assinaturas
 				add_action( "admin_menu",                          [ $this, "add_submenu_page"    ], 11 );
 				add_action( "triibo_api_service_add_button",       [ $this, "add_btn"             ], 11 );
 				add_action( "triibo_api_service_list_plugin_node", [ $this, "add_info_dependency" ],    );
+
+				$gate = WC_Triibo_Assinaturas_Gateway::get_instance();
+				add_action( "rest_api_init", [ $gate->api, "register_routes" ] );
 			}
 			else
 			{
