@@ -99,25 +99,28 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	 */
 	public function generate_token( $uid, $user_id )
 	{
-		$resp = $this->node->auth( "uid: {$uid}" );
-
-		if ( $resp[ "success" ] )
+		if ( $this->node->status() )
 		{
-			$token    = $resp[ "data"  ][ "token" ];
-			$validity = ( new DateTime() )->format( "Y-m-d H:i:s" );
+			$resp = $this->node->auth( "uid: {$uid}" );
 
-			update_user_meta( $user_id, "_triibo_auth_token",    $token    );
-			update_user_meta( $user_id, "_triibo_auth_validity", $validity );
-		}
-		else
-		{
-			$this->log( "INFO - generate_token : " . json_encode( [
-				"code"    => $resp[ "code"    ],
-				"message" => $resp[ "message" ],
-				"error"   => $resp[ "error"   ]
-			] ) );
+			if ( $resp[ "success" ] )
+			{
+				$token    = $resp[ "data"  ][ "token" ];
+				$validity = ( new DateTime() )->format( "Y-m-d H:i:s" );
 
-			$this->generate_token( $uid, $user_id );
+				update_user_meta( $user_id, "_triibo_auth_token",    $token    );
+				update_user_meta( $user_id, "_triibo_auth_validity", $validity );
+			}
+			else
+			{
+				$this->log( "INFO - generate_token : " . json_encode( [
+					"code"    => $resp[ "code"    ],
+					"message" => $resp[ "message" ],
+					"error"   => $resp[ "error"   ]
+				] ) );
+
+				$this->generate_token( $uid, $user_id );
+			}
 		}
 	}
 
