@@ -11,7 +11,8 @@
  * WC requires at least: 5.8
  * WC tested up to:      6.3
  *
- * @package WooCommerce_Triibo_Assinaturas
+ * @package 			 WooCommerce_Triibo_Assinaturas
+ * @version 			 2.0.0
  */
 defined( "ABSPATH" ) || exit;
 
@@ -22,24 +23,32 @@ class WC_Triibo_Assinaturas
 	/**
 	 * Plugin version.
 	 *
-	 * @var string
+	 * @since 	1.0.0
+	 * @var 	string
 	 */
 	const VERSION = "2.0.0";
 
 	/**
 	 * Plugin domain.
 	 *
-	 * @var string
+	 * @since 	1.0.0
+	 * @var 	string
 	 */
 	const DOMAIN  = "triibo_assinaturas";
 
 	/**
 	 * Instance of this class.
 	 *
-	 * @var object
+	 * @since 	1.0.0
+	 * @var 	object
 	 */
 	protected static $instance = null;
 
+	/**
+	 * Construct
+	 *
+	 * @since 	1.0.0
+	 */
 	private function __construct()
     {
 		if ( class_exists( "Triibo_Api_Services" ) )
@@ -76,7 +85,8 @@ class WC_Triibo_Assinaturas
 	/**
 	 * Return an instance of this class.
 	 *
-	 * @return object A single instance of this class.
+	 * @since 	1.0.0
+	 * @return 	object A single instance of this class.
 	 */
 	public static function get_instance()
     {
@@ -87,6 +97,10 @@ class WC_Triibo_Assinaturas
 
 	/**
 	 * Register the gateway for use
+	 *
+	 * @since 	1.0.0
+	 * @param 	array $methods
+	 * @return 	array
 	 */
 	public function register_gateway( $methods )
     {
@@ -96,6 +110,9 @@ class WC_Triibo_Assinaturas
 
 	/**
 	 * WooCommerce Extra Checkout Fields for Brazil notice.
+	 *
+	 * @since 	1.0.0
+	 * @return 	void
 	 */
 	public static function ecfb_missing_notice()
 	{
@@ -105,6 +122,9 @@ class WC_Triibo_Assinaturas
 
 	/**
 	 * WooCommerce missing notice.
+	 *
+	 * @since 	1.0.0
+	 * @return 	void
 	 */
 	public static function woocommerce_missing_notice()
 	{
@@ -113,6 +133,9 @@ class WC_Triibo_Assinaturas
 
 	/**
 	 * Triibo-Api-Service missing notice.
+	 *
+	 * @since 	1.0.0
+	 * @return 	void
 	 */
 	public static function triibo_api_services_missing_notice()
 	{
@@ -122,6 +145,7 @@ class WC_Triibo_Assinaturas
 	/**
 	 * Action links.
 	 *
+	 * @since 	1.0.0
 	 * @param 	array $links
 	 * @return 	array
 	 */
@@ -135,6 +159,12 @@ class WC_Triibo_Assinaturas
 		return array_merge( $plugin_links, $links );
 	}
 
+	/**
+	 *
+	 *
+	 * @since 	1.0.0
+	 * @return 	void
+	 */
 	public function add_submenu_page()
 	{
 		add_submenu_page(
@@ -147,11 +177,23 @@ class WC_Triibo_Assinaturas
 		);
 	}
 
+	/**
+	 *
+	 *
+	 * @since 	1.0.0
+	 * @return 	void
+	 */
 	public function display_admin_menu_settings()
 	{
 		include_once dirname( __FILE__ ) . "/includes/admin/views/" . self::DOMAIN . "-settings.php";
 	}
 
+	/**
+	 *
+	 *
+	 * @since 	1.0.0
+	 * @return 	void
+	 */
 	public function add_btn()
 	{
         $url  = esc_url( admin_url( "admin.php?page=wc-settings&tab=checkout&section=" . self::DOMAIN ) );
@@ -161,6 +203,12 @@ class WC_Triibo_Assinaturas
 		echo "<p>Triibo Assinaturas | {$link}</p>";
 	}
 
+	/**
+	 *
+	 *
+	 * @since 	1.0.0
+	 * @return 	void
+	 */
 	public function add_info_dependency()
 	{
 		echo "<p> - Triibo Assinaturas</p>";

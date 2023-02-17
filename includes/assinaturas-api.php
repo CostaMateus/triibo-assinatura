@@ -2,8 +2,8 @@
 /**
  * WooCommerce Triibo Assinaturas API class
  *
- * @package WooCommerce_Triibo_Assinaturas/Classes/API
- * @version 1.0
+ * @package 	WooCommerce_Triibo_Assinaturas/Classes/API
+ * @version 	1.0.0
  */
 defined( "ABSPATH" ) || exit;
 
@@ -12,33 +12,39 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	/**
 	 * Endpoint namespace.
 	 *
-	 * @var string
+	 * @since 	1.0.0
+	 * @var 	string
 	 */
 	protected $namespace = WC_Triibo_Assinaturas::DOMAIN . "/v1";
 
 	/**
 	 * Stores the request.
 	 *
-	 * @var array
+	 * @since 	1.0.0
+	 * @var 	array
 	 */
 	protected $request = [];
 
 	/**
 	 * Gateway class.
 	 *
-	 * @var WC_Triibo_Assinaturas_Gateway
+	 * @since 	1.0.0
+	 * @var 	WC_Triibo_Assinaturas_Gateway
 	 */
 	protected $gateway;
 
 	/**
 	 * API class.
 	 *
-	 * @var Triibo_Api_Node
+	 * @since 	1.0.0
+	 * @var 	Triibo_Api_Node
 	 */
 	protected $node;
 
 	/**
 	 * Construct
+	 *
+	 * @since 	1.0.0
 	 */
 	public function __construct( $gateway = null, $node = null )
 	{
@@ -48,6 +54,9 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 
 	/**
 	 * Registra rotas api rest
+	 *
+	 * @since 	1.0.0
+	 * @return 	void
 	 */
 	public function register_routes()
 	{
@@ -95,7 +104,8 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	/**
 	 * Consulta gateway para gerar token para uso nas chamadas das APIs
 	 *
-	 * @return void
+	 * @since 	1.0.0
+	 * @return 	void
 	 */
 	public function generate_token( $uid, $user_id )
 	{
@@ -127,7 +137,8 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	/**
 	 * Verifica validade do token, se vencido, gera um novo
 	 *
-	 * @return string
+	 * @since 	1.0.0
+	 * @return 	string
 	 */
 	public function validate_token( $user_id )
 	{
@@ -161,8 +172,9 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	/**
 	 * Valida qual a bandeira dado o número do cartão
 	 *
-	 * @param array $data
-	 * @return array
+	 * @since 	1.0.0
+	 * @param 	array $data
+	 * @return 	array
 	 */
 	public function get_brand( $data )
 	{
@@ -170,7 +182,7 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 
 		$params   = [
 			"payload" => [
-				"gateway"    => $this->gateway->service,
+				"gateway"    => $this->gateway->get_service(),
 				"cardNumber" => $data[ "cardNumber" ],
 			]
 		];
@@ -186,16 +198,17 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	/**
 	 * Verifica se cartão já foi tokenizado
 	 *
-	 * @param string $number
-	 * @param string $brand
-	 * @param string $token
-	 * @return array
+	 * @since 	1.0.0
+	 * @param 	string $number
+	 * @param 	string $brand
+	 * @param 	string $token
+	 * @return 	array
 	 */
 	private function check_card_token( $number, $brand, $token )
 	{
 		$params   = [
 			"payload" => [
-				"gateway"  => $this->gateway->service,
+				"gateway"  => $this->gateway->get_service(),
 				"cardInfo" => [
 					"number" => $number,
 					"brand"  => $brand,
@@ -213,14 +226,15 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	/**
 	 * Tokeniza um cartão
 	 *
-	 * @param array $data
-	 * @return array
+	 * @since 	1.0.0
+	 * @param 	array $data
+	 * @return 	array
 	 */
 	private function create_card_token( $data, $token )
 	{
 		$params = [
 			"payload" => [
-				"gateway"  => $this->gateway->service,
+				"gateway"  => $this->gateway->get_service(),
 				"cardInfo" => [
 					"holder"         => $data[ "holder"         ],
 					"cardNumber"     => $data[ "cardNumber"     ],
@@ -241,15 +255,16 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	/**
 	 * Exclui um cartão tokenizado
 	 *
-	 * @param string $tokenIndex
-	 * @param string $token
-	 * @return array
+	 * @since 	1.0.0
+	 * @param 	string $tokenIndex
+	 * @param 	string $token
+	 * @return 	array
 	 */
 	private function delete_card_token( $tokenIndex, $token )
 	{
 		$params = [
 			"payload" => [
-				"gateway"    => $this->gateway->service,
+				"gateway"    => $this->gateway->get_service(),
 				"tokenIndex" => $tokenIndex
 			]
 		];
@@ -265,8 +280,9 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	 * Valida dados do cartão.
 	 * Retorna token do cartão, se não tiver, tokeniza.
 	 *
-	 * @param array $posted
-	 * @return array
+	 * @since 	1.0.0
+	 * @param 	array $posted
+	 * @return 	array
 	 */
 	private function status_card( $posted )
 	{
@@ -319,14 +335,15 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	/**
 	 * Processa pagamento
 	 *
-	 * @param array $data
-	 * @return array
+	 * @since 	1.0.0
+	 * @param 	array $data
+	 * @return 	array
 	 */
 	private function do_payment( $data, $token )
 	{
 		$params = [
 			"payload" => [
-				"gateway" => $this->gateway->service,
+				"gateway" => $this->gateway->get_service(),
 				"order"   => [
 					"orderId"     => $data[ "orderId"     ],
 					"totalAmount" => $data[ "totalAmount" ], // em centavos
@@ -348,7 +365,9 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 
 	/**
 	 *
-	 * @return array
+	 *
+	 * @since 	1.0.0
+	 * @return 	array
 	 */
 	public function update_subscription( $data )
 	{
@@ -385,10 +404,10 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	/**
 	 * Process the subscription request from checkout
 	 *
-	 * @param  WC_Order $order  Order data.
-	 * @param  array    $posted Posted data.
-	 *
-	 * @return array
+	 * @since 	1.0.0
+	 * @param  	WC_Order $order  Order data.
+	 * @param  	array    $posted Posted data.
+	 * @return 	array
 	 */
 	public function do_subscription_request( $order, $posted )
 	{
@@ -552,10 +571,10 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	/**
 	 * Process payment on a subscription renewal
 	 *
-	 * @param WC_Order $order Order data.
-	 * @param float    amount The amount to charge.
-	 *
-	 * @return string
+	 * @since 	1.0.0
+	 * @param 	WC_Order $order Order data.
+	 * @param 	float    amount The amount to charge.
+	 * @return 	string
 	 */
 	public function do_subscription_renewal_payment( $order, $amount )
 	{
@@ -633,15 +652,26 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 		];
 	}
 
+	/**
+	 * Register log
+	 *
+	 * @since 	1.0.0
+	 * @param 	string 	$message
+	 * @param 	boolean $is_error
+	 * @return 	void
+	 */
 	private function log( $message, $is_error = false )
 	{
-		if ( $this->gateway->debug == "yes" )
+		$id  = $this->gateway->get_id();
+		$log = $this->gateway->get_log();
+
+		if ( $this->gateway->get_debug() == "yes" )
 		{
-			$this->gateway->log->add( $this->gateway->id, $message );
+			$log->add( $id, $message );
 		}
 		else if ( $is_error )
 		{
-			$this->gateway->log->add( $this->gateway->id, $message );
+			$log->add( $id, $message );
 		}
 	}
 }

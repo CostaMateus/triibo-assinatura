@@ -2,7 +2,9 @@
 /**
  * Missing Triibo API Services notice.
  *
- * @package WooCommerce_Triibo_Assinaturas/Admin/Notices
+ * @author 		Mateus Costa <mateus@costamateus.com.br>
+ * @package 	WooCommerce_Triibo_Assinaturas/Admin/Notices
+ * @version 	1.0.0
  */
 defined( "ABSPATH" ) || exit;
 

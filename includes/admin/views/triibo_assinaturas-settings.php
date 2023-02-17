@@ -3,10 +3,9 @@
  * Provide a admin area view for the plugin
  * This file is used to markup the admin-facing aspects of the plugin.
  *
- * @since      1.2.0
- * @package    WooCommerce_Triibo_Assinaturas
- * @subpackage WooCommerce_Triibo_Assinaturas/Admin/Views
- * @author     Mateus Costa <mateus@costamateus.com.br>
+ * @author      Mateus Costa <mateus@costamateus.com.br>
+ * @package     WooCommerce_Triibo_Assinaturas/Admin/Views
+ * @version     1.2.0
  */
 ?>
 

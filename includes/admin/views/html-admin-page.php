@@ -2,7 +2,9 @@
 /**
  * Admin options screen.
  *
- * @package WooCommerce_Triibo_Assinaturas/Admin/Settings
+ * @author 		Mateus Costa <mateus@costamateus.com.br>
+ * @package 	WooCommerce_Triibo_Assinaturas/Admin/Settings
+ * @version 	1.0.0
  */
 defined( "ABSPATH" ) || exit;
 

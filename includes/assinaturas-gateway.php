@@ -2,8 +2,8 @@
 /**
  * WooCommerce Triibo Assinaturas Gateway class
  *
- * @package WooCommerce_Triibo_Assinaturas/Classes/Gateway
- * @version 1.0
+ * @package 	WooCommerce_Triibo_Assinaturas/Classes/API
+ * @version 	1.0.0
  */
 defined( "ABSPATH" ) || exit;
 
@@ -12,14 +12,64 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	/**
 	 * Instance of this class.
 	 *
-	 * @var object
+	 * @since 	1.0.0
+	 * @var 	object
 	 */
 	protected static $instance = null;
 
 	/**
-	 * Return an instance of this class.
+	 * Payment gateway (ex Cielo).
 	 *
-	 * @return object A single instance of this class.
+	 * @since 	1.0.0
+	 * @var 	string
+	 */
+	protected $service         = null;
+
+	/**
+	 * Cpf field
+	 *
+	 * @since 	1.0.0
+	 * @var 	string
+	 */
+	private $cc_hide_cpf_field = null;
+
+	/**
+	 * Instance of Api Node
+	 *
+	 * @since 	1.0.0
+	 * @var 	Triibo_Api_Node
+	 */
+	protected $node            = null;
+
+	/**
+	 * Instance of Assinaturas_API
+	 *
+	 * @since 	1.0.0
+	 * @var 	WC_Triibo_Assinaturas_API
+	 */
+	protected $api             = null;
+
+	/**
+	 * Debug
+	 *
+	 * @since 	1.0.0
+	 * @var 	string
+	 */
+	protected $debug           = null;
+
+	/**
+	 * Logger
+	 *
+	 * @since 	1.0.0
+	 * @var 	wc_get_logger|WC_Logger|null
+	 */
+	protected $log             = null;
+
+	/**
+	 * Return an instance of this class
+	 *
+	 * @since 	1.0.0
+	 * @return 	object A single instance of this class.
 	 */
 	public static function get_instance()
 	{
@@ -31,6 +81,8 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 	/**
 	 * Constructor
+	 *
+	 * @since 	1.0.0
 	 */
 	public function __construct()
 	{
@@ -87,7 +139,54 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	}
 
 	/**
+	 * Get service
+	 *
+	 * @since 	1.0.0
+	 * @return 	string
+	 */
+	public function get_service()
+	{
+		return $this->service;
+	}
+
+	/**
+	 * Get id
+	 *
+	 * @since 	1.0.0
+	 * @return 	string
+	 */
+	public function get_id()
+	{
+		return $this->id;
+	}
+
+	/**
+	 * Get debug
+	 *
+	 * @since 	1.0.0
+	 * @return 	string
+	 */
+	public function get_debug()
+	{
+		return $this->debug;
+	}
+
+	/**
+	 * Get log
+	 *
+	 * @since 	1.0.0
+	 * @return 	wc_get_logger|WC_Logger
+	 */
+	public function get_log()
+	{
+		return $this->log;
+	}
+
+	/**
 	 * Admin page.
+	 *
+	 * @since 	1.0.0
+	 * @return 	void
 	 */
 	public function admin_options()
 	{
@@ -96,6 +195,12 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 		include dirname( __FILE__ ) . "/admin/views/html-admin-page.php";
 	}
 
+	/**
+	 *
+	 *
+	 * @since 	1.0.0
+	 * @return 	void
+	 */
 	public function init_actions()
 	{
 		add_action( "wp_enqueue_scripts",                                                   [ $this, "checkout_scripts"                                  ]        );
@@ -111,7 +216,8 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	/**
 	 * Returns a bool that indicates if currency is amongst the supported ones.
 	 *
-	 * @return bool
+	 * @since 	1.0.0
+	 * @return 	bool
 	 */
 	public function using_supported_currency()
 	{
@@ -123,7 +229,8 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	 * automatically by WooCommerce before allowing customers to use the gateway
 	 * for payment.
 	 *
-	 * @return bool
+	 * @since 	1.0.0
+	 * @return 	bool
 	 */
 	public function is_available()
 	{
@@ -145,7 +252,8 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	/**
 	 * Get log.
 	 *
-	 * @return string
+	 * @since 	1.0.0
+	 * @return 	string
 	 */
 	protected function get_log_view()
 	{
@@ -162,7 +270,8 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	/**
 	 * Get log.
 	 *
-	 * @return string
+	 * @since 	1.0.0
+	 * @return 	string
 	 */
 	protected function get_global_config()
 	{
@@ -175,6 +284,9 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 	/**
 	 * Initialise Gateway Settings Form Fields.
+	 *
+	 * @since 	1.0.0
+	 * @return 	void
 	 */
 	public function init_form_fields()
 	{
@@ -232,6 +344,9 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 	/**
 	 * Checkout scripts.
+	 *
+	 * @since 	1.0.0
+	 * @return 	void
 	 */
 	public function checkout_scripts()
 	{
@@ -285,6 +400,9 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 	/**
 	 * Filter Credit card form fields
+	 *
+	 * @since 	1.0.0
+	 * @return 	void
 	 */
 	function filter_cc_fields( $fields, $id )
 	{
@@ -319,6 +437,9 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 	/**
 	 * Payment Fields Hook.
+	 *
+	 * @since 	1.0.0
+	 * @return 	void
 	 */
 	public function payment_fields()
 	{
@@ -339,18 +460,24 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	 * Process the payment
 	 * Function called by WooCommerce to process the payment
 	 *
-	 * @param  int $order_id
-	 * @return array
+	 * @since 	1.0.0
+	 * @param  	int $order_id
+	 * @return 	array
 	 */
 	public function process_payment( $order_id )
 	{
 		// Processing subscription
 		if ( function_exists( "wcs_order_contains_subscription" ) )
-		{
 			return $this->process_subscription( $order_id );
-		}
 	}
 
+	/**
+	 *
+	 *
+	 * @since 	1.0.0
+	 * @param 	mixed 	$order_id
+	 * @return 	void
+	 */
 	public function process_subscription( $order_id )
 	{
         $user      = wp_get_current_user();
@@ -403,8 +530,10 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	/**
 	 * Update order status.
 	 *
-	 * @param WC_Order $order Order data
-	 * @param array $data Response data
+	 * @since 	1.0.0
+	 * @param 	WC_Order $order Order data
+	 * @param 	array $data Response data
+	 * @return 	null
 	 */
 	public function finalize_order( $order, $data )
 	{
@@ -445,9 +574,10 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	/**
 	 * Saves the payment_id on the main subscription.
 	 *
-	 * @param int $order_id
-	 * @param array $data Data from payment
-	 * @return null
+	 * @since 	1.0.0
+	 * @param 	int $order_id
+	 * @param 	array $data Data from payment
+	 * @return 	null
 	 */
 	protected function save_triibo_payment_data( $order_id, $data )
 	{
@@ -480,10 +610,10 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	/**
 	 * Process the renewal payment.
 	 *
-	 * @param float 	$renewal_total 	The amount to charge.
-	 * @param WC_Order 	$renewal_order 	A WC_Order object created to record the renewal payment.
-	 *
-	 * @return void
+	 * @since 	1.0.0
+	 * @param 	float 	$renewal_total 	The amount to charge.
+	 * @param 	WC_Order 	$renewal_order 	A WC_Order object created to record the renewal payment.
+	 * @return 	null
 	 */
 	public function scheduled_subscription_payment( $renewal_total, $renewal_order )
 	{
@@ -507,8 +637,10 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	 * Update the _pagseguro_assinatura for a subscription after using Pagseguro Recorrente to complete a payment to make up for.
 	 * an automatic renewal payment which previously failed.
 	 *
-	 * @param WC_Subscription $subscription The subscription for which the failing payment method relates.
-	 * @param WC_Order        $renewal_order The order which recorded the successful payment (to make up for the failed automatic payment).
+	 * @since 	1.0.0
+	 * @param 	WC_Subscription $subscription The subscription for which the failing payment method relates.
+	 * @param 	WC_Order        $renewal_order The order which recorded the successful payment (to make up for the failed automatic payment).
+	 * @return 	void
 	 */
 	public function update_failing_payment_method( $subscription, $renewal_order )
 	{
@@ -528,16 +660,16 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	 * For the recurring payment method to be changeable, the subscription must be active, have future (automatic) payments
 	 * and use a payment gateway which allows the subscription to be cancelled.
 	 *
-	 * @param bool            $subscription_can_be_changed Flag of whether the subscription can be changed.
-	 * @param WC_Subscription $subscription The subscription to check.
-	 * @return bool Flag indicating whether the subscription payment method can be updated.
+	 * @since 	1.0.0
+	 * @param 	bool            $subscription_can_be_changed Flag of whether the subscription can be changed.
+	 * @param 	WC_Subscription $subscription The subscription to check.
+	 * @return 	bool Flag indicating whether the subscription payment method can be updated.
 	 */
 	function can_subscription_be_updated_to_new_payment_method( $subscription_can_be_changed, $subscription )
 	{
 		if ( $this->id == $subscription->get_payment_method() )
-		{
-			if ( $subscription->has_status( [ "active", "on-hold" ] ) ) return true;
-		}
+			if ( $subscription->has_status( [ "active", "on-hold" ] ) )
+				return true;
 
 		return $subscription_can_be_changed;
 	}
@@ -546,10 +678,11 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	 *
 	 * Return false because pagseguro does not support multiple subscriptions
 	 *
-	 * @param bool            $subscription_can_be_changed Flag of whether the subscription can be changed.
-	 * @param string $gateway_id The gateway id.
-	 * @param WC_Subscription $subscription The subscription to check.
-	 * @return bool Flag indicating whether the other subscriptions can be updated.
+	 * @since 	1.0.0
+	 * @param 	bool            $subscription_can_be_changed Flag of whether the subscription can be changed.
+	 * @param 	string $gateway_id The gateway id.
+	 * @param 	WC_Subscription $subscription The subscription to check.
+	 * @return 	bool Flag indicating whether the other subscriptions can be updated.
 	 */
 	function can_update_all_subscriptions( $can_update, $gateway_id, $subscription )
 	{
@@ -558,6 +691,14 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 		return $can_update;
 	}
 
+	/**
+	 * Register log
+	 *
+	 * @since 	1.0.0
+	 * @param 	string $message
+	 * @param 	bool $is_error
+	 * @return 	void
+	 */
 	private function log( $message, $is_error = null )
 	{
 		if ( $this->debug == "yes" )
