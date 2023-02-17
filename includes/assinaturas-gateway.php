@@ -139,6 +139,17 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	}
 
 	/**
+	 * Get api
+	 *
+	 * @since 	1.0.0
+	 * @return 	WC_Triibo_Assinaturas_API
+	 */
+	public function get_api()
+	{
+		return $this->api;
+	}
+
+	/**
 	 * Get service
 	 *
 	 * @since 	1.0.0
