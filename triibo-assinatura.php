@@ -51,9 +51,9 @@ class WC_Triibo_Assinaturas
 	 */
 	private function __construct()
     {
-		if ( class_exists( "Triibo_Api_Services" ) )
+		if ( is_plugin_active( "triibo-api-services/triibo-api-services.php" ) )
 		{
-			if ( class_exists( "WC_Subscriptions_Order" ) )
+			if ( is_plugin_active( "woocommerce-subscriptions/woocommerce-subscriptions.php" ) )
 			{
 				add_filter( "woocommerce_payment_gateways", [ $this, "register_gateway" ], 99, 1 );
 
@@ -62,7 +62,8 @@ class WC_Triibo_Assinaturas
 
 				add_filter( "plugin_action_links_" . plugin_basename( __FILE__ ), [ $this, "plugin_action_links" ] );
 
-				if ( is_admin() ) add_action( "admin_notices", [ $this, "ecfb_missing_notice" ] );
+				if ( is_admin() && !is_plugin_active( "woocommerce-extra-checkout-fields-for-brazil/woocommerce-extra-checkout-fields-for-brazil.php" ) )
+					add_action( "admin_notices", [ $this, "ecfb_missing_notice" ] );
 
 				add_action( "admin_menu",                          [ $this, "add_submenu_page"    ], 11 );
 				add_action( "triibo_api_service_add_button",       [ $this, "add_btn"             ], 11 );
@@ -116,8 +117,7 @@ class WC_Triibo_Assinaturas
 	 */
 	public static function ecfb_missing_notice()
 	{
-		if ( !class_exists( "Extra_Checkout_Fields_For_Brazil" ) )
-			include_once dirname( __FILE__ ) . "/includes/admin/views/html-notice-missing-ecfb.php";
+		include_once dirname( __FILE__ ) . "/includes/admin/views/html-notice-missing-ecfb.php";
 	}
 
 	/**
