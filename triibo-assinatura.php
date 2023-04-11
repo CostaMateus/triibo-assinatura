@@ -4,7 +4,7 @@
  * Description:          Triibo pagamento recorrente para WooCommerce. Dependências: Triibo API Services e WooCommerce Subscription.
  * Author:               Mateus Costa
  * Author URI:           https://costamateus.com.br/
- * Version:              2.0.0
+ * Version:              2.0.1
  * Text Domain:          triibo_assinaturas
  * RequiresPHP:          7.4
  * RequiresWP:           5.9
@@ -12,7 +12,7 @@
  * WC tested up to:      6.3
  *
  * @package 			 WooCommerce_Triibo_Assinaturas
- * @version 			 2.0.0
+ * @version 			 2.0.1
  */
 defined( "ABSPATH" ) || exit;
 
@@ -26,7 +26,7 @@ class WC_Triibo_Assinaturas
 	 * @since 	1.0.0
 	 * @var 	string
 	 */
-	const VERSION = "2.0.0";
+	const VERSION = "2.0.1";
 
 	/**
 	 * Plugin domain.
