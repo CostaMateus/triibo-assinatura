@@ -50,6 +50,9 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	{
 		$this->node    = $node;
 		$this->gateway = $gateway;
+
+		if ( !$gateway && !$node )
+			add_action( "rest_api_init", [ $this, "register_routes" ] );
 	}
 
 	/**
@@ -339,7 +342,7 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	 * @param 	array $data
 	 * @return 	array
 	 */
-	private function do_payment( $data, $token )
+	private function do_payment( $data, $token, $test )
 	{
 		$params = [
 			"payload" => [
@@ -358,7 +361,7 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 
 		$response = $this->node->payment( $token, $params );
 
-		$this->log( "INFO - do_payment : " . json_encode( [ $params, $response ] ) );
+		$this->log( "INFO - do_payment {$test}: " . json_encode( [ $params, $response ] ) );
 
 		return $response;
 	}
@@ -487,7 +490,7 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 				];
 
 				// EXECUTANDO PAGAMENTO
-				$response = $this->do_payment( $data, $posted[ "token" ] );
+				$response = $this->do_payment( $data, $posted[ "token" ], "new" );
 				$data     = $status_card[ "tokenIndex" ];
 
 				$response[ "data" ][ "paymentInfo" ][ "token" ] = $data;
@@ -609,7 +612,7 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 		];
 
 		// EXECUTANDO PAGAMENTO
-		$response = $this->do_payment( $data, $token );
+		$response = $this->do_payment( $data, $token, "renewal" );
 		$response[ "data" ][ "paymentInfo" ][ "token" ] = $paymentToken;
 
 		// FALHA NO PAGAMENTO
@@ -675,3 +678,5 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 		}
 	}
 }
+
+new WC_Triibo_Assinaturas_API();
