@@ -11,16 +11,6 @@
         var triibo_assinaturas_submit = false;
 
         /**
-         * Set credit card brand.
-         *
-         * @param {string} brand
-         */
-        function triiboAssinaturasSetCreditCardBrand( brand )
-        {
-            $( "#wc-triibo_assinaturas-cc-form" ).attr( "data-credit-card-brand", brand );
-        }
-
-        /**
          * Add error message
          *
          * @param {string} error
@@ -72,25 +62,10 @@
                 expirationYear  = $( "#triibo_assinaturas-card-expiry", form ).val().replace( /[^\d]/g, "" ).substr( 2 ),
                 cvc             = $( "#triibo_assinaturas-card-cvc",    form ).val(),
 
-                creditCardForm  = $( "#wc-triibo_assinaturas-cc-form",  form ),
-                brand           = creditCardForm.attr( "data-credit-card-brand" ),
                 today           = new Date();
 
             // Validate the credit card data.
             errorHtml += "<ul>";
-
-            // Validate the card brand.
-            if ( typeof brand === "undefined" || brand === "error" )
-            {
-                errorHtml += `<li>${wc_triibo_assinaturas_params.messages.invalid_card}</li>`;
-                error      = true;
-            }
-            // Validate the card brand.
-            if ( brand === "unsupported" )
-            {
-                errorHtml += `<li>${wc_triibo_assinaturas_params.messages.unsupported_card}</li>`;
-                error      = true;
-            }
 
             // Allow for year to be entered either as 2 or 4 digits
             if ( expirationYear.length === 2 )
@@ -115,22 +90,22 @@
                 error      = true;
             }
 
-            // // Validate cvv code
-            // if ( typeof cvv === 'undefined' || cvv === null || cvv.length < 3 )
-            // {
-            //     errorHtml += `<li>${wc_triibo_assinaturas_params.messages.invalid_cvv}</li>`;
-            //     error      = true;
-            // }
+            // Validate cvv code
+            if ( typeof cvv === undefined || cvv === null || cvv.length < 3 )
+            {
+                errorHtml += `<li>${wc_triibo_assinaturas_params.messages.invalid_cvv}</li>`;
+                error      = true;
+            }
 
             // Validate holder name
-            if ( typeof holder === 'undefined' || holder === null || holder === "" )
+            if ( typeof holder === undefined || holder === null || holder === "" )
             {
                 errorHtml += `<li>${wc_triibo_assinaturas_params.messages.invalid_holder}</li>`;
                 error      = true;
             }
 
             // Validate holder CPF
-            if ( typeof h_cpf === 'undefined' || h_cpf === null || h_cpf === "" )
+            if ( typeof h_cpf === undefined || h_cpf === null || h_cpf === "" )
             {
                 errorHtml += `<li>${wc_triibo_assinaturas_params.messages.invalid_h_cpf}</li>`;
                 error      = true;
@@ -150,7 +125,6 @@
                 form.append( $( "<input name='triibo_assinaturas-cvc'         type='hidden' />" ).val( cvc ) );
                 form.append( $( "<input name='triibo_assinaturas-exp_month'   type='hidden' />" ).val( expirationMonth ) );
                 form.append( $( "<input name='triibo_assinaturas-exp_year'    type='hidden' />" ).val( expirationYear ) );
-                form.append( $( "<input name='triibo_assinaturas-brand'       type='hidden' />" ).val( brand ) );
 
                 // Submit the form.
                 triibo_assinaturas_submit = true;
@@ -159,7 +133,6 @@
 
             return false;
         }
-
 
         // Display the payment for and init the input masks.
         if ( typeof wc_checkout_params != "undefined" && wc_checkout_params.is_checkout === "1" )
@@ -173,75 +146,16 @@
             triiboAssinaturasInitPaymentForm();
         }
 
-
-        // Get the credit card brand.
-        $( "body" ).on( "focusout", "#triibo_assinaturas-card-number", function() {
-            let cardNumber = $( this ).val();
-
-            if ( cardNumber.length === 19 )
-            {
-                cardNumber = cardNumber.replace( /\s+/g, "-" );
-
-                $.ajax( {
-                    url  : `${wc_triibo_assinaturas_params.base_url}/brand/${cardNumber}`,
-                    type : "GET",
-                    data : {
-                        user_id : wc_triibo_assinaturas_params.user_id,
-                    },
-                    success: function( response ) {
-                        if ( response.success )
-                        {
-                            let data = response.data;
-
-                            if ( data.brandInfo.supported )
-                            {
-                                $( "body" ).trigger( "triibo_assinaturas_credit_card_brand", data.brandInfo.brand );
-                                triiboAssinaturasSetCreditCardBrand( data.brandInfo.brand );
-                            }
-                            else
-                            {
-                                $( "body" ).trigger( "triibo_assinaturas_credit_card_brand", "unsupported" );
-                                triiboAssinaturasSetCreditCardBrand( "unsupported" );
-                            }
-                        }
-                        else
-                        {
-                            $( "body" ).trigger( "triibo_assinaturas_credit_card_brand", "error" );
-                            triiboAssinaturasSetCreditCardBrand( "error" );
-                        }
-                    },
-                    error: function( err ) {
-                        console.log( err );
-                        $( "body" ).trigger( "triibo_assinaturas_credit_card_brand", "error" );
-                        triiboAssinaturasSetCreditCardBrand( "error" );
-                    }
-                } );
-            }
-        } );
-
         $( "body" ).on( "updated_checkout", function() {
             var field = $( "body #triibo_assinaturas-card-number" );
 
             if ( 0 < field.length ) field.focusout();
         } );
 
-
         // Set the errors.
         $( "body" ).on( "focus", "#triibo_assinaturas-card-number, #triibo_assinaturas-card-expiry", function() {
             $( "#wc-triibo_assinaturas-cc-form .woocommerce-error" ).remove();
         } );
-
-        $( "body" ).on( "triibo_assinaturas_credit_card_brand", function( event, brand ) {
-            if ( "unsupported" == brand )
-            {
-                triiboAssinaturasAddErrorMessage( wc_triibo_assinaturas_params.messages.unsupported_card );
-            }
-            else if ( "error" == brand )
-            {
-                triiboAssinaturasAddErrorMessage( wc_triibo_assinaturas_params.messages.invalid_card );
-            }
-        });
-
 
         // Process the credit card data when submit the checkout form.
         $( "form.checkout" ).on( "checkout_place_order_triibo_assinaturas", function() {
