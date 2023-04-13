@@ -423,15 +423,15 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 			// PROCESSAMENTO DO PAGAMENTO
 			if ( $order->get_total() > 0 )
 			{
-				$item  = current( $order->get_items() );
-				$desc  = $item->get_name();
+				$item     = current( $order->get_items() );
+				$desc     = $item->get_name();
 
-				$total = intval( strval( $order->get_total() * 100 ) ); // em centavos
-				$name  = $order->get_user()->get( "display_name" ) ?: $posted[ "holder" ];
-				$doc   = $order->get_meta( "_billing_cpf", true  ) ?: $posted[ "cpf"    ];
-				$phone = "+" . preg_replace( "/\D/", "", $posted[ "phone" ] );
+				$total    = intval( strval( $order->get_total() * 100 ) ); // em centavos
+				$name     = $order->get_user()->get( "display_name" ) ?: $posted[ "holder" ];
+				$doc      = $order->get_meta( "_billing_cpf", true  ) ?: $posted[ "cpf"    ];
+				$phone    = "+" . preg_replace( "/\D/", "", $posted[ "phone" ] );
 
-				$data  = [
+				$data     = [
 					"orderId"     => $order->ID,
 					"totalAmount" => $total, // em centavos
 					"description" => $desc,
@@ -446,7 +446,6 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 				$data     = $status_card[ "tokenIndex" ];
 
 				$response[ "data" ][ "paymentInfo" ][ "token" ] = $data;
-				$this->log( "WTF - do_payment : " . json_encode( $response ) );
 			}
 			else
 			{

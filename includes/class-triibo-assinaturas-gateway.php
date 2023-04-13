@@ -611,6 +611,12 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 			 * success
 			 * 1  : 'Authorized',       // Pagamento apto a ser capturado ou definido como pago.
 			 * 2  : 'PaymentConfirmed', // Pagamento confirmado e finalizado.
+			 *
+			 * fail
+			 * 	3 : 'Denied',           // Pagamento negado por Autorizador.
+			 * 10 : 'Voided',           // Pagamento cancelado.
+			 * 11 : 'Refunded',         // Pagamento cancelado após 23h59 do dia de autorização.
+			 * 13 : 'Aborted',          // Pagamento cancelado por falha no processamento ou por ação do Antifraude.
 			 */
 
 			switch ( $data[ "status" ] )
@@ -624,6 +630,13 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 				case 0:
 				case 12:
 					$order->update_status( "on-hold" );
+				break;
+
+				case 3:
+				case 10:
+				case 11:
+				case 13:
+					$order->update_status( "failed" );
 				break;
 			}
 		}
