@@ -1,8 +1,9 @@
 <?php
 /**
- * WooCommerce Triibo Assinaturas Gateway class
+ * Triibo Assinaturas Gateway class
  *
- * @package 	WooCommerce_Triibo_Assinaturas/Classes/API
+ * @author      Mateus Costa <mateus@costamateus.com.br>
+ * @package 	Triibo_Assinaturas/Classes
  * @version 	1.0.0
  */
 defined( "ABSPATH" ) || exit;

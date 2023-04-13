@@ -11,7 +11,7 @@
  * WC requires at least: 5.8
  * WC tested up to:      6.3
  *
- * @package 			 WooCommerce_Triibo_Assinaturas
+ * @package 			 Triibo_Assinaturas
  * @version 			 2.0.1
  */
 defined( "ABSPATH" ) || exit;
