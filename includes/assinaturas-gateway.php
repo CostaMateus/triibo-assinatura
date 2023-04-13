@@ -483,7 +483,7 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	}
 
 	/**
-	 *
+	 * Process the subscription payment
 	 *
 	 * @since 	1.0.0
 	 * @param 	mixed 	$order_id
@@ -492,31 +492,55 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	public function process_subscription( $order_id )
 	{
         $user      = wp_get_current_user();
+		$token     = $this->api->validate_token( $user->ID );
+		$number    = WC()->checkout()->get_value( $this->id . "-card_number" );
+		$response  = $this->get_brand( $token, $number );
 
-		$triibo_id = get_user_meta( $user->ID, "triiboId_phone",     true );
-		$token     = get_user_meta( $user->ID, "_triibo_auth_token", true );
+		$msg       = "<b>" . $this->title . "</b>:";
 
+		if ( !$response[ "success" ] )
+		{
+			wc_add_notice( "{$msg} Erro ao consultar bandeira do cartão!", "error" );
+
+			return [
+				"result"   => "fail",
+				"redirect" => ""
+			];
+		}
+
+		if ( !$response[ "data" ][ "brandInfo" ][ "supported" ] )
+		{
+			wc_add_notice( "{$msg} Bandeira do cartão não suportada!", "error" );
+
+			return [
+				"result"   => "fail",
+				"redirect" => ""
+			];
+		}
+
+		$brand     = $response[ "data" ][ "brandInfo" ][ "brand" ];
+		$triibo_id = get_user_meta( $user->ID, "triiboId_phone", true );
 		$order     = wc_get_order( $order_id );
 
 		$cardInfo  = [
 			"token"       => $token,
 
-			"holder"      => WC()->checkout()->get_value( $this->id . "-holder"      ),
-			"cpf"         => WC()->checkout()->get_value( $this->id . "-h_cpf"       ),
+			"holder"      => WC()->checkout()->get_value( $this->id . "-holder"    ),
+			"cpf"         => WC()->checkout()->get_value( $this->id . "-h_cpf"     ),
 			"phone"       => $triibo_id,
 
-			"card_number" => WC()->checkout()->get_value( $this->id . "-card_number" ),
-			"cvc"         => WC()->checkout()->get_value( $this->id . "-cvc"         ),
-			"month"       => WC()->checkout()->get_value( $this->id . "-exp_month"   ),
-			"year"        => WC()->checkout()->get_value( $this->id . "-exp_year"    ),
-			"brand"       => WC()->checkout()->get_value( $this->id . "-brand"       ),
+			"card_number" => $number,
+			"cvc"         => WC()->checkout()->get_value( $this->id . "-cvc"       ),
+			"month"       => WC()->checkout()->get_value( $this->id . "-exp_month" ),
+			"year"        => WC()->checkout()->get_value( $this->id . "-exp_year"  ),
+			"brand"       => $brand,
 		];
 
-		$response = $this->api->do_subscription_request( $order, $cardInfo );
+		$response  = $this->api->do_subscription_request( $order, $cardInfo );
 
 		if ( ! $response[ "success" ] )
 		{
-			wc_add_notice( $response[ "error" ], "error" );
+			wc_add_notice( "{$msg} " . $response[ "error" ], "error" );
 
 			return array(
 				"result"   => "fail",
@@ -536,6 +560,30 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 			"result"   => "success",
 			"redirect" => $this->get_return_url( $order ),
 		];
+	}
+
+	/**
+	 * Validates the flag given the card number
+	 *
+	 * @since 	1.0.0
+	 * @param 	array $data
+	 * @return 	array
+	 */
+	public function get_brand( $token, $card_number )
+	{
+		$params   = [
+			"payload" => [
+				"gateway"    => $this->get_service(),
+				"cardNumber" => $card_number,
+			]
+		];
+
+		$response = $this->node->brand( $token, $params );
+
+		$params[ "payload" ][ "cardNumber" ] = "****-****-****-" . substr( $card_number, -4 );
+		$this->log( "INFO - get_brand : " . json_encode( [ $params, $response ] ) );
+
+		return $response;
 	}
 
 	/**
