@@ -50,9 +50,6 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	{
 		$this->node    = $node;
 		$this->gateway = $gateway;
-
-		if ( !$gateway && !$node )
-			add_action( "rest_api_init", [ $this, "register_routes" ] );
 	}
 
 	/**
@@ -63,26 +60,6 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	 */
 	public function register_routes()
 	{
-		register_rest_route(
-			$this->namespace,
-			"/brand/(?P<cardNumber>[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{4}+)",
-			[
-				"methods"             => WP_REST_Server::READABLE, // GET
-				"callback"            => [ $this, "get_brand" ],
-				"permission_callback" => "__return_true",
-				"args"                => [
-					"cardNumber" => [
-						"required" => true,
-						"type"     => "string",
-					],
-					"user_id"       => [
-						"required" => true,
-						"type"     => "string",
-					],
-				],
-			]
-		);
-
 		register_rest_route(
 			$this->namespace,
 			"/payment/(?P<order_id>[0-9]+)/update/(?P<approved>[a-zA-Z]+)",
@@ -170,32 +147,6 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 		$token = get_user_meta( $user_id, "_triibo_auth_token", true );
 
 		return $token;
-	}
-
-	/**
-	 * Valida qual a bandeira dado o número do cartão
-	 *
-	 * @since 	1.0.0
-	 * @param 	array $data
-	 * @return 	array
-	 */
-	public function get_brand( $data )
-	{
-		$token    = $this->validate_token( $data[ "user_id" ] );
-
-		$params   = [
-			"payload" => [
-				"gateway"    => $this->gateway->get_service(),
-				"cardNumber" => $data[ "cardNumber" ],
-			]
-		];
-
-		$response = $this->node->brand( $token, $params );
-
-		// $params[ "payload" ][ "cardNumber" ] = "****-****-****-" . substr( $data[ "cardNumber" ], -4 );
-		// $this->log( "INFO - get_brand : " . json_encode( [ $params, $response ] ) );
-
-		return $response;
 	}
 
 	/**
@@ -678,5 +629,3 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 		}
 	}
 }
-
-new WC_Triibo_Assinaturas_API();
