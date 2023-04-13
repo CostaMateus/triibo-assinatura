@@ -7,7 +7,7 @@
  */
 defined( "ABSPATH" ) || exit;
 
-class WC_Triibo_Assinaturas_API extends WP_REST_Controller
+class Triibo_Assinaturas_Api extends WP_REST_Controller
 {
 	/**
 	 * Endpoint namespace.
@@ -29,7 +29,7 @@ class WC_Triibo_Assinaturas_API extends WP_REST_Controller
 	 * Gateway class.
 	 *
 	 * @since 	1.0.0
-	 * @var 	WC_Triibo_Assinaturas_Gateway
+	 * @var 	Triibo_Assinaturas_Gateway
 	 */
 	protected $gateway;
 

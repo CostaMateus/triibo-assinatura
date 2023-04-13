@@ -7,7 +7,7 @@
  */
 defined( "ABSPATH" ) || exit;
 
-class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
+class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 {
 	/**
 	 * Instance of this class.
@@ -45,7 +45,7 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	 * Instance of Assinaturas_API
 	 *
 	 * @since 	1.0.0
-	 * @var 	WC_Triibo_Assinaturas_API
+	 * @var 	Triibo_Assinaturas_Api
 	 */
 	protected $api             = null;
 
@@ -132,7 +132,7 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 			}
 
 			$this->node = new Triibo_Api_Node();
-			$this->api  = new WC_Triibo_Assinaturas_API( $this, $this->node );
+			$this->api  = new Triibo_Assinaturas_Api( $this, $this->node );
 
 			$this->init_actions();
 		}
@@ -142,7 +142,7 @@ class WC_Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	 * Get api
 	 *
 	 * @since 	1.0.0
-	 * @return 	WC_Triibo_Assinaturas_API
+	 * @return 	Triibo_Assinaturas_Api
 	 */
 	public function get_api()
 	{

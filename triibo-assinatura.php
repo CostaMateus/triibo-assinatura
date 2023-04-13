@@ -57,8 +57,8 @@ class WC_Triibo_Assinaturas
 			{
 				add_filter( "woocommerce_payment_gateways", [ $this, "register_gateway" ], 99, 1 );
 
-				include_once dirname( __FILE__ ) . "/includes/assinaturas-api.php";
-				include_once dirname( __FILE__ ) . "/includes/assinaturas-gateway.php";
+				include_once dirname( __FILE__ ) . "/includes/class-triibo-assinaturas-api.php";
+				include_once dirname( __FILE__ ) . "/includes/class-triibo-assinaturas-gateway.php";
 
 				add_filter( "plugin_action_links_" . plugin_basename( __FILE__ ), [ $this, "plugin_action_links" ] );
 
@@ -102,7 +102,7 @@ class WC_Triibo_Assinaturas
 	 */
 	public function register_gateway( $methods )
     {
-		$methods[] = "WC_Triibo_Assinaturas_Gateway";
+		$methods[] = "Triibo_Assinaturas_Gateway";
 		return $methods;
 	}
 
