@@ -531,7 +531,7 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 			"phone"       => $triibo_id,
 
 			"card_number" => $number,
-			"cvc"         => WC()->checkout()->get_value( $this->id . "-cvc"       ),
+			"cvv"         => WC()->checkout()->get_value( $this->id . "-cvv"       ),
 			"month"       => WC()->checkout()->get_value( $this->id . "-exp_month" ),
 			"year"        => WC()->checkout()->get_value( $this->id . "-exp_year"  ),
 			"brand"       => $brand,
@@ -581,8 +581,8 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 		$response = $this->node->brand( $token, $params );
 
-		$params[ "payload" ][ "cardNumber" ] = "****-****-****-" . substr( $card_number, -4 );
-		$this->log( "INFO - get_brand : " . json_encode( [ $params, $response ] ) );
+		// $params[ "payload" ][ "cardNumber" ] = "****-****-****-" . substr( $card_number, -4 );
+		// $this->log( "INFO - get_brand : " . json_encode( [ $params, $response ] ) );
 
 		return $response;
 	}
@@ -641,7 +641,7 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	 */
 	protected function save_triibo_payment_data( $order_id, $data )
 	{
-		update_post_meta( $order_id, "_triibo_assinatura_payment_id",    $data[ "id" ]    );
+		update_post_meta( $order_id, "_triibo_assinatura_payment_id",    $data[ "id"    ] );
 		update_post_meta( $order_id, "_triibo_assinatura_payment_token", $data[ "token" ] );
 
 		// Also store it on the subscriptions being purchased or paid for in the order
@@ -660,7 +660,7 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 		foreach( $subscriptions as $subscription )
 		{
-			update_post_meta( $subscription->get_id(), "_triibo_assinatura_payment_id",    $data[ "id" ]    );
+			update_post_meta( $subscription->get_id(), "_triibo_assinatura_payment_id",    $data[ "id"    ] );
 			update_post_meta( $subscription->get_id(), "_triibo_assinatura_payment_token", $data[ "token" ] );
 		}
 

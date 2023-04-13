@@ -250,9 +250,9 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 			$data     = [
 				"holder"         => $posted[ "holder"      ],
 				"cardNumber"     => $posted[ "card_number" ],
-				"expirationDate" => $posted[ "month" ] . "/" . $posted[ "year" ],
-				"securityCode"   => $posted[ "cvc"   ],
-				"brand"          => $posted[ "brand" ],
+				"expirationDate" => $posted[ "month"       ] . "/" . $posted[ "year" ],
+				"securityCode"   => $posted[ "cvv"         ],
+				"brand"          => $posted[ "brand"       ],
 			];
 
 			// CRIANDO TOKEN DO CARTAO
@@ -446,6 +446,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 				$data     = $status_card[ "tokenIndex" ];
 
 				$response[ "data" ][ "paymentInfo" ][ "token" ] = $data;
+				$this->log( "WTF - do_payment : " . json_encode( $response ) );
 			}
 			else
 			{
