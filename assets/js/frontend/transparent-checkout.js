@@ -54,13 +54,12 @@
                 error           = false,
                 errorHtml       = "",
 
-                holder          = $( "#triibo_assinaturas-card-holder-name",       form ).val(),
-                h_cpf           = $( "#triibo_assinaturas-card-holder-cpf",        form ).val(),
-
-                cardNumber      = $( "#triibo_assinaturas-card-number", form ).val().replace( /\s+/g,  "-" ),
-                expirationMonth = $( "#triibo_assinaturas-card-expiry", form ).val().replace( /[^\d]/g, "" ).substr( 0, 2 ),
-                expirationYear  = $( "#triibo_assinaturas-card-expiry", form ).val().replace( /[^\d]/g, "" ).substr( 2 ),
-                cvc             = $( "#triibo_assinaturas-card-cvc",    form ).val(),
+                holder          = $( "#triibo_assinaturas-card-holder-name", form ).val(),
+                h_cpf           = $( "#triibo_assinaturas-card-holder-cpf",  form ).val(),
+                cardNumber      = $( "#triibo_assinaturas-card-number",      form ).val().replace( /\s+/g,  "-" ),
+                expirationMonth = $( "#triibo_assinaturas-card-expiry",      form ).val().replace( /[^\d]/g, "" ).substr( 0, 2 ),
+                expirationYear  = $( "#triibo_assinaturas-card-expiry",      form ).val().replace( /[^\d]/g, "" ).substr( 2 ),
+                cvv             = $( "#triibo_assinaturas-card-cvc",         form ).val(),
 
                 today           = new Date();
 
@@ -91,21 +90,21 @@
             }
 
             // Validate cvv code
-            if ( typeof cvv === undefined || cvv === null || cvv.length < 3 )
+            if ( typeof cvv    === "undefined" || cvv    === null || cvv.length < 3 )
             {
                 errorHtml += `<li>${wc_triibo_assinaturas_params.messages.invalid_cvv}</li>`;
                 error      = true;
             }
 
             // Validate holder name
-            if ( typeof holder === undefined || holder === null || holder === "" )
+            if ( typeof holder === "undefined" || holder === null || holder === "" )
             {
                 errorHtml += `<li>${wc_triibo_assinaturas_params.messages.invalid_holder}</li>`;
                 error      = true;
             }
 
             // Validate holder CPF
-            if ( typeof h_cpf === undefined || h_cpf === null || h_cpf === "" )
+            if ( typeof h_cpf  === "undefined" || h_cpf  === null || h_cpf  === "" )
             {
                 errorHtml += `<li>${wc_triibo_assinaturas_params.messages.invalid_h_cpf}</li>`;
                 error      = true;
@@ -119,12 +118,12 @@
             }
             else
             {
-                form.append( $( "<input name='triibo_assinaturas-holder'      type='hidden' />" ).val( holder ) );
-                form.append( $( "<input name='triibo_assinaturas-h_cpf'       type='hidden' />" ).val( h_cpf ) );
-                form.append( $( "<input name='triibo_assinaturas-card_number' type='hidden' />" ).val( cardNumber ) );
-                form.append( $( "<input name='triibo_assinaturas-cvc'         type='hidden' />" ).val( cvc ) );
+                form.append( $( "<input name='triibo_assinaturas-holder'      type='hidden' />" ).val( holder          ) );
+                form.append( $( "<input name='triibo_assinaturas-h_cpf'       type='hidden' />" ).val( h_cpf           ) );
+                form.append( $( "<input name='triibo_assinaturas-card_number' type='hidden' />" ).val( cardNumber      ) );
+                form.append( $( "<input name='triibo_assinaturas-cvv'         type='hidden' />" ).val( cvv             ) );
                 form.append( $( "<input name='triibo_assinaturas-exp_month'   type='hidden' />" ).val( expirationMonth ) );
-                form.append( $( "<input name='triibo_assinaturas-exp_year'    type='hidden' />" ).val( expirationYear ) );
+                form.append( $( "<input name='triibo_assinaturas-exp_year'    type='hidden' />" ).val( expirationYear  ) );
 
                 // Submit the form.
                 triibo_assinaturas_submit = true;
@@ -153,7 +152,7 @@
         } );
 
         // Set the errors.
-        $( "body" ).on( "focus", "#triibo_assinaturas-card-number, #triibo_assinaturas-card-expiry", function() {
+        $( "body").on( "focus", "#triibo_assinaturas-card-number, #triibo_assinaturas-card-expiry", function() {
             $( "#wc-triibo_assinaturas-cc-form .woocommerce-error" ).remove();
         } );
 
@@ -162,7 +161,7 @@
             return triiboAssinaturasformHandler();
         } );
 
-        $( "form#order_review" ).submit( function() {
+        $( "form#order_review"       ).submit( function() {
             return triiboAssinaturasformHandler();
         } );
 
