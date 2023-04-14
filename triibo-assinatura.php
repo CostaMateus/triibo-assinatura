@@ -1,10 +1,10 @@
 <?php
 /**
- * Plugin Name:          #Triibo_Assinatura
+ * Plugin Name:          #Triibo_Assinaturas
  * Description:          Triibo pagamento recorrente para WooCommerce. Dependências: Triibo API Services e WooCommerce Subscription.
  * Author:               Mateus Costa
  * Author URI:           https://costamateus.com.br/
- * Version:              2.0.1
+ * Version:              3.0.0
  * Text Domain:          triibo_assinaturas
  * RequiresPHP:          7.4
  * RequiresWP:           5.9
@@ -12,7 +12,7 @@
  * WC tested up to:      6.3
  *
  * @package 			 Triibo_Assinaturas
- * @version 			 2.0.1
+ * @version 			 3.0.0
  */
 defined( "ABSPATH" ) || exit;
 
@@ -26,7 +26,7 @@ class WC_Triibo_Assinaturas
 	 * @since 	1.0.0
 	 * @var 	string
 	 */
-	const VERSION = "2.0.1";
+	const VERSION = "3.0.0";
 
 	/**
 	 * Plugin domain.
@@ -57,8 +57,9 @@ class WC_Triibo_Assinaturas
 			{
 				add_filter( "woocommerce_payment_gateways", [ $this, "register_gateway" ], 99, 1 );
 
-				include_once dirname( __FILE__ ) . "/includes/class-triibo-assinaturas-api.php";
-				include_once dirname( __FILE__ ) . "/includes/class-triibo-assinaturas-gateway.php";
+				include_once dirname( __FILE__ ) . "/includes/class-triibo-assinatura-api.php";
+				include_once dirname( __FILE__ ) . "/includes/class-triibo-assinatura-gateway.php";
+				require_once dirname( __FILE__ ) . "/includes/rest-api/class-triibo-assinatura-rest.php";
 
 				add_filter( "plugin_action_links_" . plugin_basename( __FILE__ ), [ $this, "plugin_action_links" ] );
 
@@ -68,6 +69,8 @@ class WC_Triibo_Assinaturas
 				add_action( "admin_menu",                          [ $this, "add_submenu_page"    ], 11 );
 				add_action( "triibo_api_service_add_button",       [ $this, "add_btn"             ], 11 );
 				add_action( "triibo_api_service_list_plugin_node", [ $this, "add_info_dependency" ],    );
+
+				new Triibo_Assinaturas_Rest();
 			}
 			else
 			{
