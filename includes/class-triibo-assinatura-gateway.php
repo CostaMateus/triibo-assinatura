@@ -256,7 +256,7 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 						WC_Subscriptions_Change_Payment_Gateway::$is_request_to_change_payment
 					 );
 
-		if ( ! class_exists( "Extra_Checkout_Fields_For_Brazil" ) ) $available = false;
+		if ( !class_exists( "Extra_Checkout_Fields_For_Brazil" ) ) $available = false;
 
 		return $available;
 	}
@@ -539,17 +539,17 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 		$response  = $this->api->do_subscription_request( $order, $cardInfo );
 
-		if ( ! $response[ "success" ] )
+		if ( !$response[ "success" ] )
 		{
 			wc_add_notice( "{$msg} " . $response[ "error" ], "error" );
 
-			return array(
+			return [
 				"result"   => "fail",
 				"redirect" => ""
-			);
+			];
 		}
 
-		if ( ! isset( $response[ "payment_change" ] ) || ! $response[ "payment_change" ] )
+		if ( !isset( $response[ "payment_change" ] ) || !$response[ "payment_change" ] )
 		{
 			$this->finalize_order( $order, $response[ "data" ] );
 
@@ -599,7 +599,14 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	{
 		if ( $order )
 		{
-			if ( $data[ "id" ] ) $this->save_triibo_payment_data( $order->get_id(), $data );
+			if ( $data[ "id" ] )
+			{
+				$this->save_triibo_payment_data( $order->get_id(), $data );
+
+				$note  = "Payment ID: {$data[ "id" ]}\n";
+				$note .= "Gateway: " . $this->service;
+				$order->add_order_note( $note );
+			}
 
 			$this->log( "INFO - finalize_order : ID " . $order->get_id() . " : " . json_encode( $data ) );
 
@@ -692,7 +699,7 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	{
 		$response = $this->api->do_subscription_renewal_payment( $renewal_order, $renewal_total );
 
-		if ( ! $response[ "success" ] )
+		if ( !$response[ "success" ] )
 		{
 			$this->log( "ERROR - scheduled_subscription_payment : order_id " . $renewal_order->ID . " | " . json_encode( $response ), true );
 
