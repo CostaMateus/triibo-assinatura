@@ -202,7 +202,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 
 		$response = $this->node->create_token( $token, $params );
 
-		$this->log( "INFO - create_card_token : " . json_encode( [ $params, $response ] ) );
+		$this->log( "INFO - create_card_token : " . json_encode( $response ) );
 
 		return $response;
 	}
@@ -296,13 +296,19 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 	 */
 	private function do_payment( $data, $token, $test )
 	{
-		$params = [
+		/**
+		 * Added treatment of description string
+		 * @version 3.0.1
+		 */
+		$descrip  = $this->treatDescription( $data[ "description" ] );
+
+		$params   = [
 			"payload" => [
 				"gateway" => $this->gateway->get_service(),
 				"order"   => [
 					"orderId"     => $data[ "orderId"     ],
 					"totalAmount" => $data[ "totalAmount" ], // em centavos
-					"description" => $data[ "description" ],
+					"description" => $descrip,
 					"tokenIndex"  => $data[ "tokenIndex"  ],
 					"name"        => $data[ "name"        ],
 					"document"    => $data[ "document"    ],
@@ -605,6 +611,37 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 			"message" => "Pagamento processado com sucesso.",
 			"data"    => $response[ "data" ][ "paymentInfo" ]
 		];
+	}
+
+	/**
+	 * Treat description
+	 *
+	 * @since 	3.0.1
+	 * @param 	string $text
+	 * @return 	string
+	 */
+	private function treatDescription( $text )
+	{
+		$divider = "-";
+
+        // replace non letter or digits by divider
+        $text = preg_replace( "~[^\pL\d]+~u", $divider, $text );
+
+        // transliterate
+        $text = iconv( "utf-8", "us-ascii//TRANSLIT", $text );
+
+        // remove unwanted characters
+        $text = preg_replace( "~[^-\w]+~", "", $text );
+
+        // trim
+        $text = trim( $text, $divider );
+
+        // remove duplicate divider
+        $text = preg_replace( "~-+~", $divider, $text );
+
+		$text = str_replace( $divider, " ", $text );
+
+		return $text;
 	}
 
 	/**
