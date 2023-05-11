@@ -85,8 +85,11 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 	/**
 	 * Consulta gateway para gerar token para uso nas chamadas das APIs
 	 *
+	 * @since 	3.0.2 	Return the token
 	 * @since 	1.0.0
-	 * @return 	void
+     * @param   string  $uid
+     * @param   integer $user_id
+	 * @return 	string
 	 */
 	public function generate_token( $uid, $user_id )
 	{
@@ -101,6 +104,8 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 
 				update_user_meta( $user_id, "_triibo_auth_token",    $token    );
 				update_user_meta( $user_id, "_triibo_auth_validity", $validity );
+
+				return $token;
 			}
 			else
 			{
@@ -110,7 +115,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 					"error"   => $resp[ "error"   ]
 				] ) );
 
-				$this->generate_token( $uid, $user_id );
+				return $this->generate_token( $uid, $user_id );
 			}
 		}
 	}
@@ -118,19 +123,53 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 	/**
 	 * Verifica validade do token, se vencido, gera um novo
 	 *
+	 * @since 	3.0.2 	Added uid validation with phone search
 	 * @since 	1.0.0
+     * @param   integer $user_id
 	 * @return 	string
 	 */
 	public function validate_token( $user_id )
 	{
+		$phone    = get_user_meta( $user_id, "triiboId_phone",        true );
+
+		if ( !$phone ) return null;
+
 		$uid      = get_user_meta( $user_id, "_triibo_id",            true );
 		$token    = get_user_meta( $user_id, "_triibo_auth_token",    true );
 		$validity = get_user_meta( $user_id, "_triibo_auth_validity", true );
 
+		if ( !$uid )
+		{
+			$success = false;
+			$resp    = $this->node->auth( "" );
+
+			if ( $resp[ "success" ] )
+			{
+				$_token = $resp[ "data"  ][ "token" ];
+				$resp   = $this->node->find_uid( $_token, $phone );
+				$this->log( "INFO - find_uid : search user by phone '$phone'" );
+
+				if ( $resp[ "success" ] )
+				{
+					$uid = $resp[ "data" ][ "usersUid" ][ $phone ];
+					$this->log( "INFO - find_uid : user found '$uid'" );
+
+					if ( $uid )
+					{
+						$success = true;
+						$token   = null;
+						update_user_meta( $user_id, "_triibo_id", $uid );
+					}
+				}
+			}
+
+			if ( !$success ) return null;
+		}
+
 		if ( !$token )
 		{
 			$this->log( "INFO - validate_token : user without token $user_id" );
-			$this->generate_token( $uid, $user_id );
+			return $this->generate_token( $uid, $user_id );
 		}
 		else
 		{
@@ -141,13 +180,11 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 			if ( $diff->d > 0 || $diff->h > 10 )
 			{
 				$this->log( "INFO - validate_token : experied token $user_id" );
-				$this->generate_token( $uid, $user_id );
+				return $this->generate_token( $uid, $user_id );
 			}
+
+			return $token;
 		}
-
-		$token = get_user_meta( $user_id, "_triibo_auth_token", true );
-
-		return $token;
 	}
 
 	/**
@@ -262,7 +299,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 			if ( !$response[ "success" ] )
 			{
 				$error = "Falha ao consultar token.";
-				$this->log( "ERROR - create_card_token : " . json_encode( [ $error, $response ] ), true );
+				$this->log( "ERROR - (cod EP2) create_card_token : " . json_encode( [ $error, $response ] ), true );
 
 				return [
 					"success" => false,
@@ -383,7 +420,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 
 			if ( !$status_card[ "success" ] )
 			{
-				$this->log( "ERROR - update_payment_method : SUBS " . $subscription->get_id(), true );
+				$this->log( "ERROR - (cod EP4) update_payment_method : SUBS " . $subscription->get_id(), true );
 
 				return [
 					"success" => false,
@@ -478,7 +515,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 				if ( $status_card[ "created" ] )
 				{
 					$response = $this->delete_card_token( $status_card[ "tokenIndex" ], $posted[ "token" ] );
-					$this->log( "WARNING - delete_card_token : " . json_encode( [ $response ] ) );
+					$this->log( "WARNING - (cod EP3) delete_card_token : " . json_encode( [ $response ] ) );
 				}
 
 				return [
@@ -501,7 +538,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 				if ( $status_card[ "created" ] )
 				{
 					$response = $this->delete_card_token( $status_card[ "tokenIndex" ], $posted[ "token" ] );
-					$this->log( "WARNING - delete_card_token : " . json_encode( [ $response ] ) );
+					$this->log( "WARNING - (cod EP6) delete_card_token : " . json_encode( [ $response ] ) );
 				}
 
 				return [
@@ -520,7 +557,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 			];
 		}
 
-		$this->log( "WARNING - Could not process subscription on do_subscription_request()", true );
+		$this->log( "WARNING (cod EP99) - Could not process subscription on do_subscription_request()", true );
 
 		// Return error message.
 		return [
@@ -541,6 +578,18 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 	{
 		$user_id      = $order->get_user_id();
 		$token        = $this->validate_token( $user_id );
+
+		if ( !$token )
+		{
+			$error = "Ocorreu um erro ao processar seu pagamento, tente novamente.";
+			$this->log( "ERROR - (cod EP8) validate_token in do_payment : invalid token", true );
+
+			return [
+				"success"    => false,
+				"error"      => "$error (cod EP8)",
+				"full_error" => null,
+			];
+		}
 
 		$item         = current( $order->get_items() );
 		$desc         = $item->get_name();
@@ -577,7 +626,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 		if ( !$response[ "success" ] )
 		{
 			$error = "Ocorreu um erro ao processar seu pagamento, tente novamente.";
-			$this->log( "ERROR - do_payment renewal : " . json_encode( [ $error, $response, $data ] ), true );
+			$this->log( "ERROR - (cod EP5) do_payment renewal : " . json_encode( [ $error, $response, $data ] ), true );
 
 			return [
 				"success"    => false,
@@ -594,7 +643,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 			// 13 : 'Aborted',          // Pagamento cancelado por falha no processamento ou por ação do Antifraude.
 
 			$error = "Cobrança recusada pela operadora do cartão.";
-			$this->log( "ERROR - do_payment renewal : " . json_encode( [ $error, $response, $data ] ), true );
+			$this->log( "ERROR - (cod EP7) do_payment renewal : " . json_encode( [ $error, $response, $data ] ), true );
 
 			return [
 				"success"    => false,
