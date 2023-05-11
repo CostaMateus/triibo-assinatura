@@ -492,12 +492,25 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	 */
 	public function process_subscription( $order_id )
 	{
-        $user      = wp_get_current_user();
+		$msg       = "<b>" . $this->title . "</b>:";
+		$user      = wp_get_current_user();
 		$token     = $this->api->validate_token( $user->ID );
+
+		if ( !$token )
+		{
+			$msg  = "{$msg} Sua conta não está vinculado a uma conta Triibo!<br>";
+			$msg .= "Por favor, vincule sua conta Triibo, refazendo o login através do 'Entrar com Triibo'.";
+
+			wc_add_notice( $msg, "error" );
+
+			return [
+				"result"   => "fail",
+				"redirect" => ""
+			];
+		}
+
 		$number    = WC()->checkout()->get_value( $this->id . "-card_number" );
 		$response  = $this->get_brand( $token, $number );
-
-		$msg       = "<b>" . $this->title . "</b>:";
 
 		if ( !$response[ "success" ] )
 		{
