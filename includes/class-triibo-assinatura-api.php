@@ -625,6 +625,14 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 		// FALHA NO PAGAMENTO
 		if ( !$response[ "success" ] )
 		{
+			if ( $response[ "code" ] == 401 && $response[ "data" ][ "error" ] == "Invalid token." )
+			{
+				$error = "Token inválido, retentativa.";
+				$this->log( "ERROR - (cod EP5) do_payment renewal : " . json_encode( [ $error, $response, $data ] ), true );
+
+				return $this->do_subscription_renewal_payment( $order, $amount );
+			}
+
 			$error = "Ocorreu um erro ao processar seu pagamento, tente novamente.";
 			$this->log( "ERROR - (cod EP5) do_payment renewal : " . json_encode( [ $error, $response, $data ] ), true );
 
