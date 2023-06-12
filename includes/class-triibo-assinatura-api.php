@@ -630,6 +630,10 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 				$error = "Token inválido, retentativa.";
 				$this->log( "ERROR - (cod EP5) do_payment renewal : " . json_encode( [ $error, $response, $data ] ), true );
 
+				$uid   = get_user_meta( $user_id, "_triibo_id", true );
+
+				$this->generate_token( $uid, $user_id );
+
 				return $this->do_subscription_renewal_payment( $order, $amount );
 			}
 
