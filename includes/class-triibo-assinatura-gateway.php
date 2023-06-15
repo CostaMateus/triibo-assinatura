@@ -617,7 +617,9 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 				$this->save_triibo_payment_data( $order->get_id(), $data );
 
 				$note  = "Payment ID: {$data[ "id" ]}\n";
-				$note .= "Gateway: " . $this->service;
+				$note .= "Gateway: {$this->service}\n";
+				$note .= "Message: {$data[ "message" ]}\n";
+				$note .= "Code: 0".
 				$order->add_order_note( $note );
 			}
 
