@@ -533,8 +533,10 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 		}
 
 		$brand     = $response[ "data" ][ "brandInfo" ][ "brand" ];
-		$triibo_id = get_user_meta( $user->ID, "triiboId_phone", true );
 		$order     = wc_get_order( $order_id );
+
+		$triibo_id = get_user_meta( $user->ID, "_triibo_phone", true );
+		$triibo_id = $triibo_id ?: get_user_meta( $user->ID, "triiboId_phone", true );
 
 		$cardInfo  = [
 			"token"       => $token,

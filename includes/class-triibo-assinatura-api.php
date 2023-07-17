@@ -130,7 +130,8 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 	 */
 	public function validate_token( $user_id )
 	{
-		$phone    = get_user_meta( $user_id, "triiboId_phone",        true );
+		$phone    = get_user_meta( $user_id, "_triibo_phone",         true );
+		$phone    = $phone ?: get_user_meta( $user_id, "triiboId_phone", true );
 
 		if ( !$phone ) return null;
 
@@ -597,7 +598,8 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 		$total        = intval( strval( $amount * 100 ) ); // em centavos
 		$name         = $order->get_user()->get( "display_name" );
 		$doc          = $order->get_meta( "_billing_cpf", true );
-		$phone        = get_user_meta( $user_id, "triiboId_phone", true );
+		$phone        = get_user_meta( $user_id, "_triibo_phone", true );
+		$phone        = $phone ?: get_user_meta( $user_id, "triiboId_phone", true );
 
 		if ( wcs_order_contains_subscription( $order->ID ) )
 			$subscriptions = wcs_get_subscriptions_for_order( $order->ID );
