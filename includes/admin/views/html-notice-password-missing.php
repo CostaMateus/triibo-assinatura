@@ -10,15 +10,11 @@ defined( "ABSPATH" ) || exit;
 
 ?>
 
-<div class="error inline">
+<div class="error inline" >
 	<p>
 		<strong>
-			<?php _e( $this->method_title . " - desativado", WC_Triibo_Assinaturas::DOMAIN ); ?>
+			<?php _e( $this->method_title . " - desativado", "triibo_assinaturas" ); ?>
 		</strong>:
-		<?php
-			$text  = "Você deve informar os dados de acesso da API.";
-			$text .= "Atualize as credenciais " . $this->get_global_config() . ".";
-			_e( $text, WC_Triibo_Assinaturas::DOMAIN );
-		?>
+		<?php _e( "Você deve informar os dados de acesso da API. Atualize as credenciais {$this->get_global_config()}.", "triibo_assinaturas" ); ?>
 	</p>
 </div>

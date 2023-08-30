@@ -13,8 +13,11 @@ defined( "ABSPATH" ) || exit;
 <div class="error inline">
 	<p>
 		<strong>
-			<?php _e( "Triibo Desativado", WC_Triibo_Assinaturas::DOMAIN ); ?>
+			<?php _e( "Triibo Desativado", "triibo_assinaturas" ); ?>
 		</strong>:
-		<?php printf( __( "A moeda <code>%s</code> não é suportada. Funciona apenas com Real Brasileiro.", WC_Triibo_Assinaturas::DOMAIN ), get_woocommerce_currency() ); ?>
+		<?php
+			$curr = get_woocommerce_currency();
+			_e ( "A moeda <code>{$curr}</code> não é suportada. Funciona apenas com Real Brasileiro.", "triibo_assinaturas" );
+		?>
 	</p>
 </div>
