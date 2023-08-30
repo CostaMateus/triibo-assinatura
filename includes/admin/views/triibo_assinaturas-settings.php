@@ -12,8 +12,8 @@
 <div class="wrap">
 	<h2>Triibo Assinaturas</h2>
     <?php
-        $url  = esc_url( admin_url( "admin.php?page=wc-settings&tab=checkout&section=" . WC_Triibo_Assinaturas::DOMAIN ) );
-        $text = __( "WC Configurações", WC_Triibo_Assinaturas::DOMAIN );
+        $url  = esc_url( admin_url( "admin.php?page=wc-settings&tab=checkout&section=" . "triibo_assinaturas" ) );
+        $text = __( "WC Configurações", "triibo_assinaturas" );
         $link = "<a href='{$url}' >{$text}</a>";
 
         echo "<p>{$link}</p>";
