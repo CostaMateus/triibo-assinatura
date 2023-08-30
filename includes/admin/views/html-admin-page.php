@@ -18,8 +18,10 @@ defined( "ABSPATH" ) || exit;
 		if ( ! $this->using_supported_currency() &&
 			 ! class_exists( "woocommerce_wpml" ) ) include dirname( __FILE__ ) . "/html-notice-currency-not-supported.php";
 
-		if ( $this->node->empty( "user" ) ) include dirname( __FILE__ ) . "/html-notice-account-missing.php";
-		if ( $this->node->empty( "pass" ) ) include dirname( __FILE__ ) . "/html-notice-password-missing.php";
+		if ( $this->node->empty( "user" ) )
+			include dirname( __FILE__ ) . "/html-notice-account-missing.php";
+		else if ( $this->node->empty( "pass" ) )
+			include dirname( __FILE__ ) . "/html-notice-password-missing.php";
 	}
 ?>
 
