@@ -579,7 +579,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 		// Return error message.
 		return [
 			"success" => false,
-			"error"   => "<strong>Triibo Recorrente</strong>: " . __( "Ocorreu um erro ao processar seu pagamento, tente novamente. Ou entre em contato conosco para obter assistência. (cod EP99)", WC_Triibo_Assinaturas::DOMAIN ),
+			"error"   => "<strong>Triibo Recorrente</strong>: " . __( "Ocorreu um erro ao processar seu pagamento, tente novamente. Ou entre em contato conosco para obter assistência. (cod EP99)", "triibo_assinaturas" ),
 		];
 	}
 
