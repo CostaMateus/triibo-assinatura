@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin View: Notice - Email missing
+ * Admin View: Notice - Email/Token missing
  *
  * @author 		Mateus Costa <mateus@costamateus.com.br>
  * @package 	WooCommerce_Triibo_Assinaturas/Admin/Notices
