@@ -92,7 +92,7 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 		if ( class_exists( "WC_Subscriptions_Order" ) )
 		{
 			$this->id                 = WC_Triibo_Assinaturas::DOMAIN;
-			$this->icon               = apply_filters( "woocommerce_" . $this->id . "_icon", plugins_url( "assets/images/triibo-25-cor-completo.png", plugin_dir_path( __FILE__ ) ) );
+			$this->icon               = apply_filters( "woocommerce_" . $this->id . "_icon", plugins_url( "assets/images/icon-cc.png", plugin_dir_path( __FILE__ ) ) );
 
 			$this->method_title       = __( "Triibo Recorrente",                                         $this->id );
 			$this->method_description = __( "Pagamentos com cartão de crédito usando a Triibo Gateway.", $this->id );
