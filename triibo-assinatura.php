@@ -1,18 +1,19 @@
 <?php
 /**
- * Plugin Name:          #Triibo_Assinaturas
- * Description:          Triibo pagamento recorrente para WooCommerce. Dependências: Triibo API Services e WooCommerce Subscription.
- * Author:               Mateus Costa
- * Author URI:           https://costamateus.com.br/
- * Version:              3.0.5
- * Text Domain:          triibo_assinaturas
- * RequiresPHP:          7.4
- * RequiresWP:           5.9
- * WC requires at least: 5.8
- * WC tested up to:      6.3
+ * Plugin Name: 			#Triibo_Assinaturas
+ * Plugin URI: 				https://triibo.com.br
+ * Description: 			Triibo pagamento recorrente para WooCommerce. Dependências: Triibo API Services e WooCommerce Subscription.
+ * Author: 					Mateus Costa
+ * Author URI: 				https://costamateus.com.br/
+ * Version: 				3.1.0
+ * Text Domain: 			triibo_assinaturas
+ * RequiresPHP: 			7.4
+ * RequiresWP: 				5.9
+ * WC requires at least: 	5.8
+ * WC tested up to: 		6.3
  *
- * @package 			 Triibo_Assinaturas
- * @version 			 3.0.5
+ * @package 	Triibo_Assinaturas
+ * @version 	3.1.0
  */
 defined( "ABSPATH" ) || exit;
 
@@ -26,7 +27,7 @@ class WC_Triibo_Assinaturas
 	 * @since 	1.0.0
 	 * @var 	string
 	 */
-	const VERSION = "3.0.5";
+	const VERSION = "3.1.0";
 
 	/**
 	 * Plugin domain.
@@ -62,6 +63,7 @@ class WC_Triibo_Assinaturas
 				require_once dirname( __FILE__ ) . "/includes/rest-api/class-triibo-assinatura-rest.php";
 
 				add_filter( "plugin_action_links_" . plugin_basename( __FILE__ ), [ $this, "plugin_action_links" ] );
+				add_filter( "plugin_row_meta",                                    [ $this, "plugin_row_meta"     ], 10, 3 );
 
 				if ( is_admin() && !is_plugin_active( "woocommerce-extra-checkout-fields-for-brazil/woocommerce-extra-checkout-fields-for-brazil.php" ) )
 					add_action( "admin_notices", [ $this, "ecfb_missing_notice" ] );
@@ -157,6 +159,38 @@ class WC_Triibo_Assinaturas
 		$plugin_links[] = "<a href='{$url}' >{$text}</a>";
 
 		return array_merge( $plugin_links, $links );
+	}
+
+	/**
+	 * Add link to changelog modal
+	 *
+	 * @since 	3.1.0
+	 * @param 	array 	$plugin_meta
+	 * @param 	string 	$plugin_file
+	 * @param 	array 	$plugin_data
+	 * @return 	array
+	 */
+	public function plugin_row_meta( $plugin_meta, $plugin_file, $plugin_data )
+	{
+		$path = path_join( WP_PLUGIN_DIR, $plugin_file );
+
+		if ( DIRECTORY_SEPARATOR == "\\" )
+			$path = str_replace( "/", "\\", $path );
+
+        if ( __FILE__ === $path )
+		{
+            $url = plugins_url( "readme.txt", __FILE__ );
+
+            $plugin_meta[] = sprintf(
+                "<a href='%s' class='thickbox open-plugin-details-modal' aria-label='%s' data-title='%s'>%s</a>",
+                add_query_arg( "TB_iframe", "true", $url ),
+                esc_attr( sprintf( __( "More information about %s" ), $plugin_data[ "Name" ] ) ),
+                esc_attr( $plugin_data[ "Name" ] ),
+                __( "Histórico de alterações" )
+            );
+        }
+
+        return $plugin_meta;
 	}
 
 	/**
