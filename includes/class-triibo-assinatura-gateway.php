@@ -618,10 +618,27 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 			{
 				$this->save_triibo_payment_data( $order->get_id(), $data );
 
-				$note  = "Payment ID: {$data[ "id" ]}\n";
+				$pay_id  = $data[ "id"      ];
+				$message = $data[ "message" ];
+				$note    = "Payment ID: {$pay_id}\n";
+
+				/**
+				 * Add the cielo TID code to the order note
+				 *
+				 * @since 	3.2.1
+				 */
+				if ( $this->service == "cielo" )
+				{
+					if ( isset( $data[ "tid" ] ) )
+					{
+						$pay_tid  = $data[ "tid" ];
+						$note    .= "TID: {$pay_tid}\n";
+					}
+				}
+
 				$note .= "Gateway: {$this->service}\n";
-				$note .= "Message: {$data[ "message" ]}\n";
-				$note .= "Code: 0".
+				$note .= "Message: {$message}\n";
+				$note .= "Code: 0";
 				$order->add_order_note( $note );
 			}
 

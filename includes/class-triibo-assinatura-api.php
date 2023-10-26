@@ -506,9 +506,26 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 				];
 			}
 
-			$note  = "Payment ID: {$response[ "data" ][ "paymentInfo" ][ "id" ]}\n";
+			$pay_id  = $response[ "data" ][ "paymentInfo" ][ "id"      ];
+			$message = $response[ "data" ][ "paymentInfo" ][ "message" ];
+			$note    = "Payment ID: {$pay_id}\n";
+
+			/**
+			 * Add the cielo TID code to the order note
+			 *
+			 * @since 	3.2.1
+			 */
+			if ( $this->gateway->get_service() == "cielo" )
+			{
+				if ( isset( $response[ "data" ][ "paymentInfo" ][ "tid" ] ) )
+				{
+					$pay_tid  = $response[ "data" ][ "paymentInfo" ][ "tid" ];
+					$note    .= "TID: {$pay_tid}\n";
+				}
+			}
+
 			$note .= "Gateway: {$this->gateway->get_service()}\n";
-			$note .= "Message: {$response[ "data" ][ "paymentInfo" ][ "message" ]}\n";
+			$note .= "Message: {$message}\n";
 
 			// FALHA NO PAGAMENTO
 			if ( !$response[ "success" ] )
