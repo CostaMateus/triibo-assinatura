@@ -416,7 +416,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 		// Payment method changes act on the subscription not the original order
 		if ( $is_payment_change )
 		{
-			$subscription = wcs_get_subscription( wcs_get_objects_property( $order, "id" ) );
+			$subscription = wcs_get_subscription( $order->get_id() );
 			$status_card  = $this->status_card( $posted );
 
 			if ( !$status_card[ "success" ] )
@@ -444,7 +444,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 		{
 			// Otherwise the order is the $order
 			if ( $cart_item = wcs_cart_contains_failed_renewal_order_payment() ||
-				 false !== WC_Subscriptions_Renewal_Order::get_failed_order_replaced_by( wcs_get_objects_property( $order, "id" ) ) )
+				 false !== WC_Subscriptions_Renewal_Order::get_failed_order_replaced_by( $order->get_id() ) )
 			{
 				$subscriptions                 = wcs_get_subscriptions_for_renewal_order( $order );
 				$order_contains_failed_renewal = true;
@@ -476,7 +476,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 				$phone    = "+" . preg_replace( "/\D/", "", $posted[ "phone" ] );
 
 				$data     = [
-					"orderId"     => $order->ID,
+					"orderId"     => $order->get_id(),
 					"totalAmount" => $total, // em centavos
 					"description" => $desc,
 					"tokenIndex"  => $status_card[ "tokenIndex" ],
@@ -634,17 +634,17 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 		$phone        = get_user_meta( $user_id, "_triibo_phone", true );
 		$phone        = $phone ?: get_user_meta( $user_id, "triiboId_phone", true );
 
-		if ( wcs_order_contains_subscription( $order->ID ) )
-			$subscriptions = wcs_get_subscriptions_for_order( $order->ID );
-		elseif ( wcs_order_contains_renewal( $order->ID ) )
-			$subscriptions = wcs_get_subscriptions_for_renewal_order( $order->ID );
+		if ( wcs_order_contains_subscription( $order->get_id() ) )
+			$subscriptions = wcs_get_subscriptions_for_order( $order->get_id() );
+		elseif ( wcs_order_contains_renewal( $order->get_id() ) )
+			$subscriptions = wcs_get_subscriptions_for_renewal_order( $order->get_id() );
 
 		$subscription = array_pop( $subscriptions );
 
 		$paymentToken = get_post_meta( $subscription->get_id(), "_triibo_assinatura_payment_token", true );
 
 		$data         = [
-			"orderId"     => $order->ID,
+			"orderId"     => $order->get_id(),
 			"totalAmount" => $total, // em centavos
 			"description" => $desc,
 			"tokenIndex"  => $paymentToken,
