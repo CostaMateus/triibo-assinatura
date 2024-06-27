@@ -55,6 +55,9 @@ class WC_Triibo_Assinaturas
     {
 		if ( is_plugin_active( "triibo-api-services/triibo-api-services.php" ) )
 		{
+			/**
+			 * @since 3.3.0
+			 */
 			if ( class_exists( "WooCommerce" ) )
 				add_action( "before_woocommerce_init", [ $this, "setup_hpos_compatibility" ] );
 
