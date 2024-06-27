@@ -606,9 +606,9 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	 * Update order status.
 	 *
 	 * @since 	1.0.0
-	 * @param 	WC_Order $order Order data
-	 * @param 	array $data Response data
-	 * @return 	null
+	 * @param 	WC_Order 	$order Order data
+	 * @param 	array 		$data Response data
+	 * @return 	void
 	 */
 	public function finalize_order( $order, $data )
 	{
@@ -681,8 +681,6 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 				break;
 			}
 		}
-
-		return;
 	}
 
 	/**
