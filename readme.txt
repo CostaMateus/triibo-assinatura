@@ -1,5 +1,9 @@
 == Changelog ==
 
+= 3.4.0 - 2024/09/16 =
+
+- Atualização do formato dos logs para o novo padrão do WooCommerce
+
 = 3.3.0 - 2024/06/27 =
 
 - Adicionada compatibilidade com WooCommerce HPOS

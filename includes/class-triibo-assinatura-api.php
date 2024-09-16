@@ -4,7 +4,7 @@
  *
  * @author      Mateus Costa <mateus@costamateus.com.br>
  * @package 	Triibo_Assinaturas/Classes
- * @version 	1.0.0
+ * @version 	3.4.0
  */
 defined( "ABSPATH" ) || exit;
 
@@ -109,11 +109,11 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 			}
 			else
 			{
-				$this->log( "INFO - generate_token : " . json_encode( [
+				$this->log( "info", "generate_token : " . print_r( [
 					"code"    => $resp[ "code"    ],
 					"message" => $resp[ "message" ],
 					"error"   => $resp[ "error"   ]
-				] ) );
+				], true ) );
 
 				return $this->generate_token( $uid, $user_id );
 			}
@@ -148,12 +148,12 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 			{
 				$_token = $resp[ "data"  ][ "token" ];
 				$resp   = $this->node->find_uid( $_token, $phone );
-				$this->log( "INFO - find_uid : search user by phone '$phone'" );
+				$this->log( "info", "find_uid : search user by phone '{$phone}'" );
 
 				if ( $resp[ "success" ] )
 				{
 					$uid = $resp[ "data" ][ "usersUid" ][ $phone ];
-					$this->log( "INFO - find_uid : user found '$uid'" );
+					$this->log( "info", "find_uid : user found '{$uid}'" );
 
 					if ( $uid )
 					{
@@ -169,7 +169,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 
 		if ( !$token )
 		{
-			$this->log( "INFO - validate_token : user without token $user_id" );
+			$this->log( "info", "validate_token : user without token {$user_id}" );
 			return $this->generate_token( $uid, $user_id );
 		}
 		else
@@ -180,7 +180,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 
 			if ( $diff->d > 0 || $diff->h > 10 )
 			{
-				$this->log( "INFO - validate_token : experied token $user_id" );
+				$this->log( "info", "validate_token : experied token {$user_id}" );
 				return $this->generate_token( $uid, $user_id );
 			}
 
@@ -211,7 +211,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 
 		$response = $this->node->check_token( $token, $params );
 
-		$this->log( "INFO - check_card_token : " . json_encode( [ $params, $response ] ) );
+		$this->log( "info", "check_card_token : " . print_r( [ $params, $response ], true ) );
 
 		return $response;
 	}
@@ -240,7 +240,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 
 		$response = $this->node->create_token( $token, $params );
 
-		$this->log( "INFO - create_card_token : " . json_encode( $response ) );
+		$this->log( "info", "create_card_token : " . print_r( $response, true ) );
 
 		return $response;
 	}
@@ -264,7 +264,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 
 		$response = $this->node->delete_token( $token, $params );
 
-		$this->log( "INFO - delete_card_token : " . json_encode( [ $params, $response ] ) );
+		$this->log( "info", "delete_card_token : " . print_r( [ $params, $response ], true ) );
 
 		return $response;
 	}
@@ -300,7 +300,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 			if ( !$response[ "success" ] )
 			{
 				$error = "Falha ao consultar token.";
-				$this->log( "ERROR - (cod EP2) create_card_token : " . json_encode( [ $error, $response ] ), true );
+				$this->log( "error", "(cod EP2) create_card_token : " . print_r( [ $error, $response ], true ), true );
 
 				return [
 					"success" => false,
@@ -357,7 +357,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 
 		$response = $this->node->payment( $token, $params );
 
-		$this->log( "INFO - do_payment {$test}: " . json_encode( [ $params, $response ] ) );
+		$this->log( "info", "do_payment {$test}: " . print_r( [ $params, $response ], true ) );
 
 		return $response;
 	}
@@ -421,7 +421,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 
 			if ( !$status_card[ "success" ] )
 			{
-				$this->log( "ERROR - (cod EP4) update_payment_method : SUBS " . $subscription->get_id(), true );
+				$this->log( "critical", "(cod EP4) update_payment_method : SUBS " . $subscription->get_id(), true );
 
 				return [
 					"success" => false,
@@ -433,7 +433,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 
 			update_post_meta( $subscription->get_id(), "_triibo_assinatura_payment_token", $status_card[ "tokenIndex" ] );
 
-			$this->log( "INFO - update_payment_method : SUBS " . $subscription->get_id() . " | old ID " . $paymentToken . " | new ID " . $status_card[ "tokenIndex" ] );
+			$this->log( "info", "update_payment_method : SUBS " . $subscription->get_id() . " | old ID " . $paymentToken . " | new ID " . $status_card[ "tokenIndex" ] );
 
 			return [
 				"success"        => true,
@@ -531,13 +531,13 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 			if ( !$response[ "success" ] )
 			{
 				$error = "Ocorreu um erro ao processar seu pagamento, tente novamente.";
-				$this->log( "ERROR - (cod EP3) do_payment : " . json_encode( [ $error, $response, $data ] ), true );
+				$this->log( "critical", "(cod EP3) do_payment : " . print_r( [ $error, $response, $data ], true ), true );
 
 				// SE TOKEN DO CARTAO FOI CRIADO NESSE MOMENTO, EXCLUI
 				if ( $status_card[ "created" ] )
 				{
 					$response = $this->delete_card_token( $status_card[ "tokenIndex" ], $posted[ "token" ] );
-					$this->log( "WARNING - (cod EP3) delete_card_token : " . json_encode( [ $response ] ) );
+					$this->log( "error", "(cod EP3) delete_card_token : " . print_r( [ $response ], true ) );
 				}
 
 				$note .= "Code: cod EP3";
@@ -557,13 +557,13 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 				// 13 : 'Aborted',          // Pagamento cancelado por falha no processamento ou por ação do Antifraude.
 
 				$error = "Cobrança recusada pela operadora do cartão.";
-				$this->log( "ERROR - (cod EP6) do_payment : " . json_encode( [ $error, $response, $data ] ), true );
+				$this->log( "critical", "(cod EP6) do_payment : " . print_r( [ $error, $response, $data ], true ), true );
 
 				// SE TOKEN DO CARTAO FOI CRIADO NESSE MOMENTO, EXCLUI
 				if ( $status_card[ "created" ] )
 				{
 					$response = $this->delete_card_token( $status_card[ "tokenIndex" ], $posted[ "token" ] );
-					$this->log( "WARNING - (cod EP6) delete_card_token : " . json_encode( [ $response ] ) );
+					$this->log( "error", "(cod EP6) delete_card_token : " . print_r( [ $response ], true ) );
 				}
 
 				$note .= "Code: cod EP6";
@@ -585,7 +585,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 			];
 		}
 
-		$this->log( "WARNING (cod EP99) - Could not process subscription on do_subscription_request()", true );
+		$this->log( "error", "(cod EP99) - Could not process subscription on do_subscription_request()", true );
 
 		$note  = "Payment ID: \n";
 		$note .= "Gateway: {$this->gateway->get_service()}\n";
@@ -616,7 +616,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 		if ( !$token )
 		{
 			$error = "Ocorreu um erro ao processar seu pagamento, tente novamente.";
-			$this->log( "ERROR - (cod EP8) validate_token in do_payment : invalid token", true );
+			$this->log( "critical", "(cod EP8) validate_token in do_payment : invalid token", true );
 
 			return [
 				"success"    => false,
@@ -667,7 +667,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 			if ( $response[ "code" ] == 401 && $response[ "data" ][ "error" ] == "Invalid token." )
 			{
 				$error = "Token inválido, retentativa.";
-				$this->log( "ERROR - (cod EP5) do_payment renewal : " . json_encode( [ $error, $response, $data ] ), true );
+				$this->log( "critical", "(cod EP5) do_payment renewal : " . print_r( [ $error, $response, $data ], true ), true );
 
 				$uid   = get_user_meta( $user_id, "_triibo_id", true );
 
@@ -677,7 +677,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 			}
 
 			$error = "Ocorreu um erro ao processar seu pagamento, tente novamente.";
-			$this->log( "ERROR - (cod EP5) do_payment renewal : " . json_encode( [ $error, $response, $data ] ), true );
+			$this->log( "critical", "(cod EP5) do_payment renewal : " . print_r( [ $error, $response, $data ], true ), true );
 
 			$note .= "Code: cod EP5 2";
 			$order->add_order_note( $note );
@@ -697,7 +697,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 			// 13 : 'Aborted',          // Pagamento cancelado por falha no processamento ou por ação do Antifraude.
 
 			$error = "Cobrança recusada pela operadora do cartão.";
-			$this->log( "ERROR - (cod EP7) do_payment renewal : " . json_encode( [ $error, $response, $data ] ), true );
+			$this->log( "critical", "(cod EP7) do_payment renewal : " . print_r( [ $error, $response, $data ], true ), true );
 
 			$note .= "Code: cod EP7";
 			$order->add_order_note( $note );
@@ -751,25 +751,26 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 	}
 
 	/**
-	 * Register log
+	 * Register logs.
 	 *
+	 * @since 	3.4.0 	Changing to the new woocommerce standard.
+	 * 					Added param $level.
 	 * @since 	1.0.0
+	 * @param 	string 	$level
 	 * @param 	string 	$message
-	 * @param 	boolean $is_error
+	 * @param 	bool 	$is_error
 	 * @return 	void
 	 */
-	private function log( $message, $is_error = false )
+	private function log( string $level, string $message, bool $is_error = false )
 	{
-		$id  = $this->gateway->get_id();
-		$log = $this->gateway->get_log();
+		$id      = $this->gateway->get_id();
+		$debug   = $this->gateway->get_debug();
 
-		if ( $this->gateway->get_debug() == "yes" )
-		{
-			$log->add( $id, $message );
-		}
-		else if ( $is_error )
-		{
-			$log->add( $id, $message );
-		}
+		$logger  = ( function_exists( "wc_get_logger" ) ) ? wc_get_logger() : new WC_Logger();
+
+		$context = [ "source" => $id ];
+
+		if ( $is_error || $debug === "yes" )
+			$logger->$level( $message, $context );
 	}
 }

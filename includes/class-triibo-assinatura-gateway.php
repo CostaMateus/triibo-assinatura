@@ -4,7 +4,7 @@
  *
  * @author      Mateus Costa <mateus@costamateus.com.br>
  * @package 	Triibo_Assinaturas/Classes
- * @version 	1.0.0
+ * @version 	3.4.0
  */
 defined( "ABSPATH" ) || exit;
 
@@ -27,7 +27,7 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	protected $service         = null;
 
 	/**
-	 * Cpf field
+	 * Cpf field.
 	 *
 	 * @since 	1.0.0
 	 * @var 	string
@@ -35,7 +35,7 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	private $cc_hide_cpf_field = null;
 
 	/**
-	 * Instance of Api Node
+	 * Instance of Api Node.
 	 *
 	 * @since 	1.0.0
 	 * @var 	Triibo_Api_Node
@@ -43,7 +43,7 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	protected $node            = null;
 
 	/**
-	 * Instance of Assinaturas_API
+	 * Instance of Assinaturas_API.
 	 *
 	 * @since 	1.0.0
 	 * @var 	Triibo_Assinaturas_Api
@@ -51,7 +51,7 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	protected $api             = null;
 
 	/**
-	 * Debug
+	 * Debug.
 	 *
 	 * @since 	1.0.0
 	 * @var 	string
@@ -59,15 +59,7 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	protected $debug           = null;
 
 	/**
-	 * Logger
-	 *
-	 * @since 	1.0.0
-	 * @var 	wc_get_logger|WC_Logger|null
-	 */
-	protected $log             = null;
-
-	/**
-	 * Return an instance of this class
+	 * Return an instance of this class.
 	 *
 	 * @since 	1.0.0
 	 * @return 	object A single instance of this class.
@@ -81,8 +73,9 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	}
 
 	/**
-	 * Constructor
+	 * Constructor.
 	 *
+	 * @since 	3.4.0 	Removed $log class property.
 	 * @since 	1.0.0
 	 */
 	public function __construct()
@@ -119,21 +112,15 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 			$this->init_settings();
 
 			// Define user set variables.
-			$this->title       = $this->get_option( "title"       );
-			$this->description = $this->get_option( "description" );
-			$this->service     = $this->get_option( "service"     );
-			$this->debug       = $this->get_option( "debug"       );
+			$this->title              = $this->get_option( "title"       );
+			$this->description        = $this->get_option( "description" );
+			$this->service            = $this->get_option( "service"     );
+			$this->debug              = $this->get_option( "debug"       );
 
-			$this->cc_hide_cpf_field = apply_filters( $this->id . "_hide_cpf_field", false );
+			$this->cc_hide_cpf_field  = apply_filters( $this->id . "_hide_cpf_field", false );
 
-			// Active logs.
-			if ( $this->debug == "yes" )
-			{
-				$this->log = ( function_exists( "wc_get_logger" ) ) ? wc_get_logger() : new WC_Logger();
-			}
-
-			$this->node = new Triibo_Api_Node();
-			$this->api  = new Triibo_Assinaturas_Api( $this, $this->node );
+			$this->node               = new Triibo_Api_Node();
+			$this->api                = new Triibo_Assinaturas_Api( $this, $this->node );
 
 			$this->init_actions();
 		}
@@ -181,17 +168,6 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	public function get_debug()
 	{
 		return $this->debug;
-	}
-
-	/**
-	 * Get log
-	 *
-	 * @since 	1.0.0
-	 * @return 	wc_get_logger|WC_Logger
-	 */
-	public function get_log()
-	{
-		return $this->log;
 	}
 
 	/**
@@ -596,8 +572,8 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 		$response = $this->node->brand( $token, $params );
 
-		// $params[ "payload" ][ "cardNumber" ] = "****-****-****-" . substr( $card_number, -4 );
-		// $this->log( "INFO - get_brand : " . json_encode( [ $params, $response ] ) );
+		$params[ "payload" ][ "cardNumber" ] = "****-****-****-" . substr( $card_number, -4 );
+		$this->log( "info", "get_brand : " . print_r( [ $params, $response ], true ) );
 
 		return $response;
 	}
@@ -642,7 +618,7 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 				$order->add_order_note( $note );
 			}
 
-			$this->log( "INFO - finalize_order : ID " . $order->get_id() . " : " . json_encode( $data ) );
+			$this->log( "info", "finalize_order : ID " . $order->get_id() . " : " . print_r( $data, true ) );
 
 			/**
 			 * waiting
@@ -733,7 +709,7 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 		if ( !$response[ "success" ] )
 		{
-			$this->log( "ERROR - scheduled_subscription_payment : order_id " . $renewal_order->ID . " | " . json_encode( $response ), true );
+			$this->log( "critical", "scheduled_subscription_payment : order_id " . $renewal_order->ID . " | " . print_r( $response, true ), true );
 
 			$renewal_order->update_status( "pending" );
 
@@ -761,7 +737,7 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 		$sid = $subscription->get_id();
 
-		$this->log( "ERROR - update_failing_payment_method : SUB - $sid | id - $id | tk - $tk", true );
+		$this->log( "critical", "update_failing_payment_method : SUB - $sid | id - $id | tk - $tk", true );
 
 		update_post_meta( $sid, "_triibo_assinatura_payment_id",    $id );
 		update_post_meta( $sid, "_triibo_assinatura_payment_token", $tk );
@@ -804,22 +780,23 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	}
 
 	/**
-	 * Register log
+	 * Register logs.
 	 *
+	 * @since 	3.4.0 	Changing to the new woocommerce standard.
+	 * 					Added param $level.
 	 * @since 	1.0.0
-	 * @param 	string $message
-	 * @param 	bool $is_error
+	 * @param 	string 	$level
+	 * @param 	string 	$message
+	 * @param 	bool 	$is_error
 	 * @return 	void
 	 */
-	private function log( $message, $is_error = null )
+	private function log( string $level, string $message, bool $is_error = false )
 	{
-		if ( $this->debug == "yes" )
-		{
-			$this->log->add( $this->id, $message );
-		}
-		else if ( $is_error )
-		{
-			$this->log->add( $this->id, $message );
-		}
+		$logger  = ( function_exists( "wc_get_logger" ) ) ? wc_get_logger() : new WC_Logger();
+
+		$context = [ "source" => $this->id ];
+
+		if ( $is_error || $this->debug === "yes" )
+			$logger->$level( $message, $context );
 	}
 }
