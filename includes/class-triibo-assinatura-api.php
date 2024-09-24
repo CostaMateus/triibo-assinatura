@@ -349,11 +349,13 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 					"description" => $descrip,
 					"tokenIndex"  => $data[ "tokenIndex"  ],
 					"name"        => $data[ "name"        ],
-					"document"    => $data[ "document"    ],
 					"cellPhone"   => $data[ "phone"       ],
 				],
 			]
 		];
+
+		if ( $data[ "document" ] )
+			$params[ "payload" ][ "order" ][ "document" ] = $data[ "document" ];
 
 		$response = $this->node->payment( $token, $params );
 
