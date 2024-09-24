@@ -85,14 +85,14 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 		if ( class_exists( "WC_Subscriptions_Order" ) )
 		{
 			$this->id                 = WC_Triibo_Assinaturas::DOMAIN;
-			$this->icon               = apply_filters( "woocommerce_" . $this->id . "_icon", plugins_url( "assets/images/icon-cc.png", plugin_dir_path( __FILE__ ) ) );
+			$this->icon               = apply_filters( "woocommerce_{$this->id}_icon", plugins_url( "assets/images/icon-cc.png", plugin_dir_path( __FILE__ ) ) );
 
 			$this->method_title       = __( "Triibo Recorrente",                                         $this->id );
 			$this->method_description = __( "Pagamentos com cartão de crédito usando a Triibo Gateway.", $this->id );
 			$this->order_button_text  = __( "Prossiga para o pagamento",                                 $this->id );
 
 			// Subscriptions
-			$this->supports           = apply_filters( $this->id . "_supports_array", [
+			$this->supports           = apply_filters( "{$this->id}_supports_array", [
 				"subscriptions",
 				"subscription_cancellation",
 				"subscription_suspension",
@@ -178,7 +178,7 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	 */
 	public function admin_options()
 	{
-		wp_enqueue_script( $this->id . "_admin", plugins_url( "assets/js/admin/admin.js", plugin_dir_path( __FILE__ ) ), [ "jquery" ], WC_Triibo_Assinaturas::VERSION, true );
+		wp_enqueue_script( "{$this->id}_admin", plugins_url( "assets/js/admin/admin.js", plugin_dir_path( __FILE__ ) ), [ "jquery" ], WC_Triibo_Assinaturas::VERSION, true );
 
 		include dirname( __FILE__ ) . "/admin/views/html-admin-page.php";
 	}
@@ -191,14 +191,14 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	 */
 	public function init_actions()
 	{
-		add_action( "wp_enqueue_scripts",                                                   [ $this, "checkout_scripts"                                  ]        );
-		add_action( "woocommerce_scheduled_subscription_payment_"              . $this->id, [ $this, "scheduled_subscription_payment"                    ], 10, 2 );
-		add_action( "woocommerce_update_options_payment_gateways_"             . $this->id, [ $this, "process_admin_options"                             ]        );
-		add_action( "woocommerce_subscription_failing_payment_method_updated_" . $this->id, [ $this, "update_failing_payment_method"                     ], 10, 2 );
+		add_action( "wp_enqueue_scripts",                                                  [ $this, "checkout_scripts"                                  ]        );
+		add_action( "woocommerce_scheduled_subscription_payment_{$this->id}",              [ $this, "scheduled_subscription_payment"                    ], 10, 2 );
+		add_action( "woocommerce_update_options_payment_gateways_{$this->id}",             [ $this, "process_admin_options"                             ]        );
+		add_action( "woocommerce_subscription_failing_payment_method_updated_{$this->id}", [ $this, "update_failing_payment_method"                     ], 10, 2 );
 
-		add_filter( "woocommerce_credit_card_form_fields",                                  [ $this, "filter_cc_fields"                                  ], 10, 2 );
-		add_filter( "woocommerce_can_subscription_be_updated_to_new-payment-method",        [ $this, "can_subscription_be_updated_to_new_payment_method" ], 20, 2 );
-		add_filter( "woocommerce_subscriptions_update_payment_via_pay_shortcode",           [ $this, "can_update_all_subscriptions"                      ], 20, 3 );
+		add_filter( "woocommerce_credit_card_form_fields",                                 [ $this, "filter_cc_fields"                                  ], 10, 2 );
+		add_filter( "woocommerce_can_subscription_be_updated_to_new-payment-method",       [ $this, "can_subscription_be_updated_to_new_payment_method" ], 20, 2 );
+		add_filter( "woocommerce_subscriptions_update_payment_via_pay_shortcode",          [ $this, "can_update_all_subscriptions"                      ], 20, 3 );
 	}
 
 	/**
@@ -248,11 +248,11 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 		$date      = date( "Y-m-d" );
 		$esc_attr  = esc_attr( $this->id );
 		$sanitize  = sanitize_file_name( wp_hash( $this->id ) );
-		$admin_url = "admin.php?page=wc-status&tab=logs&log_file=$esc_attr-$date-$sanitize.log";
+		$admin_url = "admin.php?page=wc-status&tab=logs&log_file={$esc_attr}-{$date}-{$sanitize}.log";
 		$link      = esc_url( admin_url( $admin_url ) );
 		$text      = __( "System Status &gt; Logs", $this->id );
 
-		return "<a href='$link' target='_blank' >$text</a>";
+		return "<a href='{$link}' target='_blank' >{$text}</a>";
 	}
 
 	/**
@@ -346,20 +346,20 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 		if ( false === $load_scripts ) return;
 
-		wp_enqueue_style(  $this->id . "_checkout", plugins_url( "assets/css/frontend/transparent-checkout.css", plugin_dir_path( __FILE__ ) ), [],                                                                          WC_Triibo_Assinaturas::VERSION       );
-		wp_enqueue_script( $this->id . "_checkout", plugins_url( "assets/js/frontend/transparent-checkout.js",   plugin_dir_path( __FILE__ ) ), [ "json2", "jquery", "woocommerce-extra-checkout-fields-for-brazil-front" ], WC_Triibo_Assinaturas::VERSION, true );
+		wp_enqueue_style(  "{$this->id}_checkout", plugins_url( "assets/css/frontend/transparent-checkout.css", plugin_dir_path( __FILE__ ) ), [],                                                                          WC_Triibo_Assinaturas::VERSION       );
+		wp_enqueue_script( "{$this->id}_checkout", plugins_url( "assets/js/frontend/transparent-checkout.js",   plugin_dir_path( __FILE__ ) ), [ "json2", "jquery", "woocommerce-extra-checkout-fields-for-brazil-front" ], WC_Triibo_Assinaturas::VERSION, true );
 
         $user = wp_get_current_user();
 
 		$this->api->validate_token( $user->ID );
 
 		$url = ( $this->node->env() )
-				? "https://dev-marketplace.triibo.com.br/wp-json/" . $this->id . "/v1"
-				: "https://marketplace.triibo.com.br/wp-json/" . $this->id . "/v1";
+				? "https://dev-marketplace.triibo.com.br/wp-json/{$this->id}/v1"
+				: "https://marketplace.triibo.com.br/wp-json/{$this->id}/v1";
 
 		wp_localize_script(
-			$this->id . "_checkout",
-			"wc_" . $this->id . "_params",
+			"{$this->id}_checkout",
+			"wc_{$this->id}_params",
 			[
 				"user_id"  => $user->ID,
 				"base_url" => $url,
@@ -400,22 +400,22 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 			$fields[ "card-expiry-field" ] =
 			"<p class='form-row form-row-first'>
-				<label for='" . $id . "-card-expiry' >"      . esc_html__( "Validade (MM/YY)", $this->id ) . "&nbsp;<span class='required' >*</span></label>
-				<input id='"  . $id . "-card-expiry' class='input-text wc-credit-card-form-card-expiry' inputmode='numeric' autocomplete='cc-exp' autocorrect='no' autocapitalize='no' spellcheck='no' type='tel' placeholder='" . esc_attr__( "MM / YY", $this->id ) . "' " . $this->field_name( "card-expiry" ) . " />
+				<label for='{$id}-card-expiry' >"      . esc_html__( "Validade (MM/YY)", $this->id ) . "&nbsp;<span class='required' >*</span></label>
+				<input id='{$id}-card-expiry' class='input-text wc-credit-card-form-card-expiry' inputmode='numeric' autocomplete='cc-exp' autocorrect='no' autocapitalize='no' spellcheck='no' type='tel' placeholder='" . esc_attr__( "MM / YY", $this->id ) . "' " . $this->field_name( "card-expiry" ) . " />
 			</p>";
 
 			$fields[ "card-name" ] =
 			"<p class='form-row form-row-wide'>
-				<label for='" . $id . "-card-holder-name' >" . esc_html__( "Nome do titular", $this->id ) . "&nbsp;<span class='required' >*</span></label>
-				<input id='"  . $id . "-card-holder-name' class='input-text wc-credit-card-form_card_holder_name' type='text' placeholder='" . esc_attr__( "Informe o nome do titular", $this->id ) . "' " . $this->field_name( "card-holder-name" ) . " />
+				<label for='{$id}-card-holder-name' >" . esc_html__( "Nome do titular", $this->id ) . "&nbsp;<span class='required' >*</span></label>
+				<input id='{$id}-card-holder-name' class='input-text wc-credit-card-form_card_holder_name' type='text' placeholder='" . esc_attr__( "Informe o nome do titular", $this->id ) . "' " . $this->field_name( "card-holder-name" ) . " />
 			</p>";
 
 			if ( false === $this->cc_hide_cpf_field || is_wc_endpoint_url( "order-pay" ) )
 			{
 				$fields[ "card-cpf" ] =
 				"<p class='form-row form-row-wide'>
-					<label for='" . $id . "-card-holder-cpf' >" . esc_html__( "CPF do titular", $this->id ) . "&nbsp;<span class='required'>*</span></label>
-					<input id='"  . $id . "-card-holder-cpf' class='input-text wc-credit-card-form_card_holder_cpf' type='tel' placeholder='" . esc_attr__( "000.000.000-00", $this->id ) . "' " . $this->field_name( "card-holder-cpf" ) . "/>
+					<label for='{$id}-card-holder-cpf' >" . esc_html__( "CPF do titular", $this->id ) . "&nbsp;<span class='required'>*</span></label>
+					<input id='{$id}-card-holder-cpf' class='input-text wc-credit-card-form_card_holder_cpf' type='tel' placeholder='" . esc_attr__( "000.000.000-00", $this->id ) . "' " . $this->field_name( "card-holder-cpf" ) . "/>
 				</p>";
 			}
 		}
@@ -616,6 +616,7 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 				$note .= "Message: {$message}\n";
 				$note .= "Code: 0";
 				$order->add_order_note( $note );
+				$order->save();
 			}
 
 			$this->log( "info", "finalize_order : ID " . $order->get_id() . " : " . print_r( $data, true ) );
@@ -699,7 +700,7 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	 * Process the renewal payment.
 	 *
 	 * @since 	1.0.0
-	 * @param 	float 	$renewal_total 	The amount to charge.
+	 * @param 	float 		$renewal_total 	The amount to charge.
 	 * @param 	WC_Order 	$renewal_order 	A WC_Order object created to record the renewal payment.
 	 * @return 	null
 	 */
@@ -709,7 +710,7 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 
 		if ( !$response[ "success" ] )
 		{
-			$this->log( "critical", "scheduled_subscription_payment : order_id " . $renewal_order->ID . " | " . print_r( $response, true ), true );
+			$this->log( "critical", "scheduled_subscription_payment : order_id {$renewal_order->ID} | " . print_r( $response, true ), true );
 
 			$renewal_order->update_status( "pending" );
 
@@ -732,15 +733,15 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	 */
 	public function update_failing_payment_method( $subscription, $renewal_order )
 	{
-		$id = get_post_meta( $renewal_order->get_id(), "_triibo_assinatura_payment_id",    true );
-		$tk = get_post_meta( $renewal_order->get_id(), "_triibo_assinatura_payment_token", true );
+		$id  = $renewal_order->get_meta( "_triibo_assinatura_payment_id",    true );
+		$tk  = $renewal_order->get_meta( "_triibo_assinatura_payment_token", true );
 
 		$sid = $subscription->get_id();
 
-		$this->log( "critical", "update_failing_payment_method : SUB - $sid | id - $id | tk - $tk", true );
+		$this->log( "critical", "update_failing_payment_method : SUB - {$sid} | id - {$id} | tk - {$tk}", true );
 
-		update_post_meta( $sid, "_triibo_assinatura_payment_id",    $id );
-		update_post_meta( $sid, "_triibo_assinatura_payment_token", $tk );
+		$subscription->update_meta_data( "_triibo_assinatura_payment_id",    $id );
+		$subscription->update_meta_data( "_triibo_assinatura_payment_token", $tk );
 	}
 
 	/**

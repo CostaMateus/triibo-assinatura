@@ -429,9 +429,9 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 				];
 			}
 
-			$paymentToken = get_post_meta( $subscription->get_id(), "_triibo_assinatura_payment_token", true );
+			$paymentToken = $subscription->get_meta( "_triibo_assinatura_payment_token", true );
 
-			update_post_meta( $subscription->get_id(), "_triibo_assinatura_payment_token", $status_card[ "tokenIndex" ] );
+			$subscription->update_meta_data( "_triibo_assinatura_payment_token", $status_card[ "tokenIndex" ] );
 
 			$this->log( "info", "update_payment_method : SUBS " . $subscription->get_id() . " | old ID " . $paymentToken . " | new ID " . $status_card[ "tokenIndex" ] );
 
@@ -542,6 +542,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 
 				$note .= "Code: cod EP3";
 				$order->add_order_note( $note );
+				$order->save();
 
 				return [
 					"success" => false,
@@ -568,6 +569,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 
 				$note .= "Code: cod EP6";
 				$order->add_order_note( $note );
+				$order->save();
 
 				return [
 					"success" => false,
@@ -592,6 +594,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 		$note .= "Message: Could not process subscription on do_subscription_request()\n";
 		$note .= "Code: cod EP99";
 		$order->add_order_note( $note );
+		$order->save();
 
 		// Return error message.
 		return [
@@ -604,8 +607,8 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 	 * Process payment on a subscription renewal
 	 *
 	 * @since 	1.0.0
-	 * @param 	WC_Order $order Order data.
-	 * @param 	float    amount The amount to charge.
+	 * @param 	WC_Order 	$order 		Order data.
+	 * @param 	float    	$amount 	The amount to charge.
 	 * @return 	string
 	 */
 	public function do_subscription_renewal_payment( $order, $amount )
@@ -615,8 +618,11 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 
 		if ( !$token )
 		{
-			$error = "Ocorreu um erro ao processar seu pagamento, tente novamente.";
+			$error = "Ocorreu um erro ao processar seu pagamento, tente novamente. (cod EP8)";
 			$this->log( "critical", "(cod EP8) validate_token in do_payment : invalid token", true );
+
+			$order->add_order_note( $note );
+			$order->save();
 
 			return [
 				"success"    => false,
@@ -641,7 +647,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 
 		$subscription = array_pop( $subscriptions );
 
-		$paymentToken = get_post_meta( $subscription->get_id(), "_triibo_assinatura_payment_token", true );
+		$paymentToken = $subscription->get_meta( "_triibo_assinatura_payment_token", true );
 
 		$data         = [
 			"orderId"     => $order->get_id(),
@@ -681,6 +687,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 
 			$note .= "Code: cod EP5 2";
 			$order->add_order_note( $note );
+			$order->save();
 
 			return [
 				"success"    => false,
@@ -701,6 +708,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 
 			$note .= "Code: cod EP7";
 			$order->add_order_note( $note );
+			$order->save();
 
 			return [
 				"success"    => false,
