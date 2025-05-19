@@ -652,8 +652,8 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param WC_Order 	$order 	Order data
-	 * @param array 	$data 	Response data
+	 * @param \WC_Order 	$order 	Order data
+	 * @param array 		$data 	Response data
 	 *
 	 * @return void
 	 */
@@ -771,8 +771,8 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	 * Process the renewal payment.
 	 *
 	 * @since 1.0.0
-	 * @param float 	$renewal_total 	The amount to charge.
-	 * @param WC_Order 	$renewal_order 	A WC_Order object created to record the renewal payment.
+	 * @param float 		$renewal_total 	The amount to charge.
+	 * @param \WC_Order 	$renewal_order 	A WC_Order object created to record the renewal payment.
 	 *
 	 * @return void
 	 */
@@ -800,8 +800,8 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param WC_Subscription  $subscription 	The subscription for which the failing payment method relates.
-	 * @param WC_Order         $renewal_order 	The order which recorded the successful payment (to make up for the failed automatic payment).
+	 * @param \WC_Subscription  $subscription 	The subscription for which the failing payment method relates.
+	 * @param \WC_Order 		$renewal_order 	The order which recorded the successful payment (to make up for the failed automatic payment).
 	 *
 	 * @return void
 	 */
@@ -826,7 +826,7 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	 * @since 1.0.0
 	 *
 	 * @param bool 				$subscription_can_be_changed 	Flag of whether the subscription can be changed.
-	 * @param WC_Subscription 	$subscription 					The subscription to check.
+	 * @param \WC_Subscription 	$subscription 					The subscription to check.
 	 *
 	 * @return bool 	Flag indicating whether the subscription payment method can be updated.
 	 */
@@ -847,7 +847,7 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	 *
 	 * @param bool 				$subscription_can_be_changed 	Flag of whether the subscription can be changed.
 	 * @param string 			$gateway_id 					The gateway id.
-	 * @param WC_Subscription 	$subscription 					The subscription to check.
+	 * @param \WC_Subscription 	$subscription 					The subscription to check.
 	 *
 	 * @return bool 	Flag indicating whether the other subscriptions can be updated.
 	 */

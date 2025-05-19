@@ -444,8 +444,8 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param WC_Order 	$order 		Order data.
-	 * @param array 	$posted 	Posted data.
+	 * @param \WC_Order 	$order 		Order data.
+	 * @param array 		$posted 	Posted data.
 	 *
 	 * @return 	array
 	 */
@@ -649,8 +649,8 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 	 *
 	 * @since 	1.0.0
 	 *
-	 * @param WC_Order 	$order 		Order data.
-	 * @param float 	$amount 	The amount to charge.
+	 * @param \WC_Order 	$order 		Order data.
+	 * @param float 		$amount 	The amount to charge.
 	 *
 	 * @return array
 	 */
