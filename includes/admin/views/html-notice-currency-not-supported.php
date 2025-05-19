@@ -2,22 +2,23 @@
 /**
  * Admin View: Notice - Currency not supported.
  *
- * @author 		Mateus Costa <mateus@costamateus.com.br>
- * @package 	WooCommerce_Triibo_Assinaturas/Admin/Notices
- * @version 	1.0.0
+ * @author Mateus Costa <mateus@costamateus.com.br>
+ *
+ * @since 1.0.0
+ * @version 1.0.0
  */
-defined( "ABSPATH" ) || exit;
+defined( constant_name: "ABSPATH" ) || exit;
 
 ?>
 
 <div class="error inline">
 	<p>
 		<strong>
-			<?php _e( "Triibo Desativado", "triibo_assinaturas" ); ?>
+			<?php _e( text: "Triibo Desativado", domain: "triibo_assinaturas" ); ?>
 		</strong>:
 		<?php
 			$curr = get_woocommerce_currency();
-			_e ( "A moeda <code>{$curr}</code> não é suportada. Funciona apenas com Real Brasileiro.", "triibo_assinaturas" );
+			_e ( text: "A moeda <code>{$curr}</code> não é suportada. Funciona apenas com Real Brasileiro.", domain: "triibo_assinaturas" );
 		?>
 	</p>
 </div>

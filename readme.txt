@@ -1,5 +1,9 @@
 == Changelog ==
 
+= 3.5.0 - 2025/05/16 =
+
+- Ajuste de requisitos.
+
 = 3.4.0 - 2024/09/16 =
 
 - Atualização do formato dos logs para o novo padrão do WooCommerce

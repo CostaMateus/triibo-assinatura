@@ -5,123 +5,145 @@
  * Description: 			Triibo pagamento recorrente para WooCommerce. Dependências: Triibo API Services e WooCommerce Subscription.
  * Author: 					Mateus Costa
  * Author URI: 				https://costamateus.com.br/
- * Version: 				3.4.0
- * Text Domain: 			triibo_assinaturas
- * Requires at least: 		6.4
- * Requires PHP: 			7.4
- * WC requires at least: 	8.0
- * WC tested up to: 		8.2
+ * Version: 				3.5.0
+ * Text Domain: 			triibo-assinaturas
+ * Requires Plugins:        triibo-api-services, woocommerce, woocommerce-subscriptions
+ * Requires at least: 		6.6
+ * Requires PHP: 			8.0
+ * WC requires at least: 	8.7.1
+ * WC tested up to: 		9.8.0
  *
- * @package 	Triibo_Assinaturas
- * @version 	3.4.0
+ * @package Triibo_Assinaturas
+ *
+ * @version 3.5.0
  */
-defined( "ABSPATH" ) || exit;
+defined( constant_name: "ABSPATH" ) || exit;
 
-if ( ! in_array( "woocommerce/woocommerce.php", apply_filters( "active_plugins", get_option( "active_plugins" ) ) ) ) return;
+/**
+ * @since 3.5.0
+ */
+$__ta_active_plugins   = apply_filters( hook_name: "active_plugins", value: get_option( option: "active_plugins" ) );
+$__ta_requires_plugins = [
+	"triibo-api-services/triibo-api-services.php",
+	"woocommerce/woocommerce.php",
+	"woocommerce-subscriptions/woocommerce-subscriptions.php"
+];
+
+/**
+ * @since 3.5.0
+ */
+foreach ( $__ta_requires_plugins as $plugin )
+	if ( ! in_array( needle: $plugin, haystack: $__ta_active_plugins, strict: true ) )
+		return;
 
 class WC_Triibo_Assinaturas
 {
 	/**
 	 * Plugin version.
 	 *
-	 * @since 	1.0.0
-	 * @var 	string
+	 * @since 1.0.0
+	 *
+	 * @var string
 	 */
-	const VERSION = "3.4.0";
+	const VERSION = "3.5.0";
 
 	/**
 	 * Plugin domain.
 	 *
-	 * @since 	1.0.0
-	 * @var 	string
+	 * @since 1.0.0
+	 *
+	 * @var string
 	 */
-	const DOMAIN  = "triibo_assinaturas";
+	const DOMAIN  = "triibo-assinaturas";
 
 	/**
 	 * Instance of this class.
 	 *
-	 * @since 	1.0.0
-	 * @var 	object
+	 * @since 1.0.0
+	 *
+	 * @var object
 	 */
 	protected static $instance = null;
 
 	/**
 	 * Construct
 	 *
-	 * @since 	3.3.0 	Added HPOS compatibility declaration
-	 * @since 	1.0.0
+	 * @since 3.3.0 	Added HPOS compatibility declaration
+	 * @since 1.0.0
 	 */
 	private function __construct()
     {
-		if ( is_plugin_active( "triibo-api-services/triibo-api-services.php" ) )
+		if ( ! is_plugin_active( plugin: "triibo-api-services/triibo-api-services.php" ) )
 		{
-			/**
-			 * @since 3.3.0
-			 */
-			if ( class_exists( "WooCommerce" ) )
-				add_action( "before_woocommerce_init", [ $this, "setup_hpos_compatibility" ] );
-
-			if ( is_plugin_active( "woocommerce-subscriptions/woocommerce-subscriptions.php" ) )
-			{
-				add_filter( "woocommerce_payment_gateways", [ $this, "register_gateway" ], 99, 1 );
-
-				include_once dirname( __FILE__ ) . "/includes/class-triibo-assinatura-api.php";
-				include_once dirname( __FILE__ ) . "/includes/class-triibo-assinatura-gateway.php";
-				require_once dirname( __FILE__ ) . "/includes/rest-api/class-triibo-assinatura-rest.php";
-
-				add_filter( "plugin_action_links_" . plugin_basename( __FILE__ ), [ $this, "plugin_action_links" ] );
-				add_filter( "plugin_row_meta",                                    [ $this, "plugin_row_meta"     ], 10, 3 );
-
-				if ( is_admin() && !is_plugin_active( "woocommerce-extra-checkout-fields-for-brazil/woocommerce-extra-checkout-fields-for-brazil.php" ) )
-					add_action( "admin_notices", [ $this, "ecfb_missing_notice" ] );
-
-				add_action( "admin_menu",                          [ $this, "add_submenu_page"    ], 11 );
-				add_action( "triibo_api_service_add_button",       [ $this, "add_btn"             ], 11 );
-				add_action( "triibo_api_service_list_plugin_node", [ $this, "add_info_dependency" ],    );
-
-				new Triibo_Assinaturas_Rest();
-			}
-			else
-			{
-				add_action( "admin_notices", [ $this, "woocommerce_missing_notice" ] );
-			}
+			add_action( hook_name: "admin_notices", callback: [ $this, "triibo_api_services_missing_notice" ] );
+			return;
 		}
-		else
+
+		if ( ! is_plugin_active( plugin: "woocommerce-subscriptions/woocommerce-subscriptions.php" ) )
 		{
-			add_action( "admin_notices", [ $this, "triibo_api_services_missing_notice" ] );
+			add_action( hook_name: "admin_notices", callback: [ $this, "woocommerce_missing_notice" ] );
+			return;
 		}
+
+		/**
+		 * @since 3.3.0
+		 */
+		if ( class_exists( class: "WooCommerce" ) )
+			add_action( hook_name: "before_woocommerce_init", callback: [ $this, "setup_hpos_compatibility" ] );
+
+		add_filter( hook_name: "woocommerce_payment_gateways", callback: [ $this, "register_gateway" ], priority: 99, accepted_args: 1 );
+
+		include_once dirname( path: __FILE__ ) . "/includes/class-triibo-assinatura-api.php";
+		include_once dirname( path: __FILE__ ) . "/includes/class-triibo-assinatura-gateway.php";
+		require_once dirname( path: __FILE__ ) . "/includes/rest-api/class-triibo-assinatura-rest.php";
+
+		add_filter( hook_name: "plugin_action_links_" . plugin_basename( file: __FILE__ ), callback: [ $this, "plugin_action_links" ] );
+		add_filter( hook_name: "plugin_row_meta",                                    callback: [ $this, "plugin_row_meta"     ], priority: 10, accepted_args: 3 );
+
+		if ( is_admin() && !is_plugin_active( plugin: "woocommerce-extra-checkout-fields-for-brazil/woocommerce-extra-checkout-fields-for-brazil.php" ) )
+			add_action( hook_name: "admin_notices", callback: [ $this, "ecfb_missing_notice" ] );
+
+		add_action( hook_name: "admin_menu",                          callback: [ $this, "add_submenu_page"    ], priority: 11 );
+		add_action( hook_name: "triibo_api_service_add_button",       callback: [ $this, "add_btn"             ], priority: 11 );
+		add_action( hook_name: "triibo_api_service_list_plugin_node", callback: [ $this, "add_info_dependency" ],    );
+
+		new Triibo_Assinaturas_Rest();
 	}
 
 	/**
 	 * Return an instance of this class.
 	 *
-	 * @since 	1.0.0
-	 * @return 	object A single instance of this class.
+	 * @since 1.0.0
+	 *
+	 * @return self 	A single instance of this class.
 	 */
-	public static function get_instance()
+	public static function get_instance() : self
     {
 		// If the single instance hasn't been set, set it now.
-		if ( null === self::$instance ) self::$instance = new self;
+		if ( null === self::$instance )
+			self::$instance = new self;
+
 		return self::$instance;
 	}
 
 	/**
 	 * Setup WooCommerce HPOS compatibility.
 	 *
-	 * @since 	3.3.0
-	 * @return 	void
+	 * @since 3.3.0
+	 *
+	 * @return void
 	 */
 	public function setup_hpos_compatibility() : void
 	{
-		if ( defined( "WC_VERSION" ) && version_compare( WC_VERSION, "7.1", "<" ) )
+		if ( defined( constant_name: "WC_VERSION" ) && version_compare( version1: WC_VERSION, version2: "7.1", operator: "<" ) )
 			return;
 
-		if ( class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) )
+		if ( class_exists( class: \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) )
 		{
 			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
-				"custom_order_tables",
-				__FILE__,
-				true
+				feature_id            : "custom_order_tables",
+				plugin_file           : __FILE__,
+				positive_compatibility: true
 			);
 		}
 	}
@@ -129,60 +151,68 @@ class WC_Triibo_Assinaturas
 	/**
 	 * Register the gateway for use
 	 *
-	 * @since 	1.0.0
-	 * @param 	array $methods
-	 * @return 	array
+	 * @since 1.0.0
+	 *
+	 * @param array 	$methods
+	 *
+	 * @return array
 	 */
-	public function register_gateway( $methods )
+	public function register_gateway( array $methods ) : array
     {
 		$methods[] = "Triibo_Assinaturas_Gateway";
+
 		return $methods;
 	}
 
 	/**
 	 * WooCommerce Extra Checkout Fields for Brazil notice.
 	 *
-	 * @since 	1.0.0
-	 * @return 	void
+	 * @since 1.0.0
+	 *
+	 * @return void
 	 */
-	public static function ecfb_missing_notice()
+	public static function ecfb_missing_notice() : void
 	{
-		include_once dirname( __FILE__ ) . "/includes/admin/views/html-notice-missing-ecfb.php";
+		include_once dirname( path: __FILE__ ) . "/includes/admin/views/html-notice-missing-ecfb.php";
 	}
 
 	/**
 	 * WooCommerce missing notice.
 	 *
-	 * @since 	1.0.0
-	 * @return 	void
+	 * @since 1.0.0
+	 *
+	 * @return void
 	 */
-	public static function woocommerce_missing_notice()
+	public static function woocommerce_missing_notice() : void
 	{
-		include_once dirname( __FILE__ ) . "/includes/admin/views/html-notice-missing-woocommerce.php";
+		include_once dirname( path: __FILE__ ) . "/includes/admin/views/html-notice-missing-woocommerce.php";
 	}
 
 	/**
 	 * Triibo-Api-Service missing notice.
 	 *
-	 * @since 	1.0.0
-	 * @return 	void
+	 * @since 1.0.0
+	 *
+	 * @return void
 	 */
-	public static function triibo_api_services_missing_notice()
+	public static function triibo_api_services_missing_notice() : void
 	{
-		include_once dirname( __FILE__ ) . "/includes/admin/views/html-notice-missing-triibo_api_services.php";
+		include_once dirname( path: __FILE__ ) . "/includes/admin/views/html-notice-missing-triibo_api_services.php";
 	}
 
 	/**
 	 * Action links.
 	 *
-	 * @since 	1.0.0
-	 * @param 	array $links
-	 * @return 	array
+	 * @since 1.0.0
+	 *
+	 * @param array 	$links
+	 *
+	 * @return array
 	 */
-	public static function plugin_action_links( $links )
+	public static function plugin_action_links( array $links ) : array
     {
-        $url            = esc_url( admin_url( "admin.php?page=wc-settings&tab=checkout&section=" . self::DOMAIN ) );
-        $text           = __( "Configurações", self::DOMAIN );
+        $url            = esc_url( url: admin_url( path: "admin.php?page=wc-settings&tab=checkout&section=" . self::DOMAIN ) );
+        $text           = __( text: "Configurações", domain: self::DOMAIN );
 		$plugin_links   = [];
 		$plugin_links[] = "<a href='{$url}' >{$text}</a>";
 
@@ -192,29 +222,31 @@ class WC_Triibo_Assinaturas
 	/**
 	 * Add link to changelog modal
 	 *
-	 * @since 	3.1.0
-	 * @param 	array 	$plugin_meta
-	 * @param 	string 	$plugin_file
-	 * @param 	array 	$plugin_data
-	 * @return 	array
+	 * @since 3.1.0
+	 *
+	 * @param array 	$plugin_meta
+	 * @param string 	$plugin_file
+	 * @param array 	$plugin_data
+	 *
+	 * @return array
 	 */
-	public function plugin_row_meta( $plugin_meta, $plugin_file, $plugin_data )
+	public function plugin_row_meta( array $plugin_meta, string $plugin_file, array $plugin_data ) : array
 	{
-		$path = path_join( WP_PLUGIN_DIR, $plugin_file );
+		$path = path_join( base: WP_PLUGIN_DIR, path: $plugin_file );
 
 		if ( DIRECTORY_SEPARATOR == "\\" )
-			$path = str_replace( "/", "\\", $path );
+			$path = str_replace( search: "/", replace: "\\", subject: $path );
 
         if ( __FILE__ === $path )
 		{
-            $url = plugins_url( "readme.txt", __FILE__ );
+            $url = plugins_url( path: "readme.txt", plugin: __FILE__ );
 
             $plugin_meta[] = sprintf(
                 "<a href='%s' class='thickbox open-plugin-details-modal' aria-label='%s' data-title='%s'>%s</a>",
                 add_query_arg( "TB_iframe", "true", $url ),
-                esc_attr( sprintf( __( "More information about %s" ), $plugin_data[ "Name" ] ) ),
-                esc_attr( $plugin_data[ "Name" ] ),
-                __( "Histórico de alterações" )
+                esc_attr( text: sprintf( format: __( text: "More information about %s" ), values: $plugin_data[ "Name" ] ) ),
+                esc_attr( text: $plugin_data[ "Name" ] ),
+                __( text: "Histórico de alterações" )
             );
         }
 
@@ -222,60 +254,64 @@ class WC_Triibo_Assinaturas
 	}
 
 	/**
+	 * Add submenu page.
 	 *
+	 * @since 1.0.0
 	 *
-	 * @since 	1.0.0
-	 * @return 	void
+	 * @return void
 	 */
-	public function add_submenu_page()
+	public function add_submenu_page() : void
 	{
 		add_submenu_page(
-			Triibo_Api_Services::get_name(),
-			"Triibo Assinaturas",
-			"Assinaturas",
-			"manage_options",
-			self::DOMAIN . "-settings",
-			[ $this, "display_admin_menu_settings" ]
+			parent_slug: Triibo_Api_Services::get_name(),
+			page_title: "Triibo Assinaturas",
+			menu_title: "Assinaturas",
+			capability: "manage_options",
+			menu_slug: self::DOMAIN . "-settings",
+			callback: [ $this, "display_admin_menu_settings" ]
 		);
 	}
 
 	/**
+	 * Display the admin menu settings.
 	 *
+	 * @since 1.0.0
 	 *
-	 * @since 	1.0.0
-	 * @return 	void
+	 * @return void
 	 */
-	public function display_admin_menu_settings()
+	public function display_admin_menu_settings() : void
 	{
-		include_once dirname( __FILE__ ) . "/includes/admin/views/" . self::DOMAIN . "-settings.php";
+		include_once dirname( path: __FILE__ ) . "/includes/admin/views/" . self::DOMAIN . "-settings.php";
 	}
 
 	/**
+	 * Add button to settings page.
 	 *
+	 * @since 1.0.0
 	 *
-	 * @since 	1.0.0
-	 * @return 	void
+	 * @return void
 	 */
-	public function add_btn()
+	public function add_btn() : void
 	{
-        $url  = esc_url( admin_url( "admin.php?page=wc-settings&tab=checkout&section=" . self::DOMAIN ) );
-		$text = __( "WC Configurações", self::DOMAIN );
+        $url  = esc_url( url: admin_url( path: "admin.php?page=wc-settings&tab=checkout&section=" . self::DOMAIN ) );
+		$text = __( text: "WC Configurações", domain: self::DOMAIN );
 		$link = "<a href='{$url}' >{$text}</a>";
 
 		echo "<p>Triibo Assinaturas | {$link}</p>";
 	}
 
 	/**
+	 * Add information about plugin dependencies.
 	 *
+	 * @since 1.0.0
 	 *
-	 * @since 	1.0.0
-	 * @return 	void
+	 * @return void
 	 */
-	public function add_info_dependency()
+	public function add_info_dependency() : void
 	{
 		echo "<p> - Triibo Assinaturas</p>";
 	}
 
 }
 
-add_action( "plugins_loaded", array( "WC_Triibo_Assinaturas", "get_instance" ), 222 );
+add_action( hook_name: "plugins_loaded", callback: array( "WC_Triibo_Assinaturas", "get_instance" ), priority: 222 );
