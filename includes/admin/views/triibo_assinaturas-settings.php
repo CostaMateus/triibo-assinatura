@@ -8,6 +8,7 @@
  * @since 1.0.0
  * @version 1.2.0
  */
+defined( constant_name: "ABSPATH" ) || exit;
 ?>
 
 <div class="wrap">
