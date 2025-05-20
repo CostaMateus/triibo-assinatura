@@ -350,14 +350,14 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 				"type"        => "checkbox",
 				"title"       => __( text: "Debug Log",                                                 domain: $this->id ),
 				"label"       => __( text: "Ativar logger",                                             domain: $this->id ),
-				"description" => sprintf( format: __( text: "Registrar log de eventos, %s", domain: $this->id ), values: $this->get_log_view() ),
+				"description" => sprintf( __( text: "Registrar log de eventos, %s", domain: $this->id ), $this->get_log_view() ),
 				"default"     => "yes",
 			],
 
 			"configs" => [
 				"type"        => "title",
 				"title"       => __( text: "Chaves de API",                                             domain: $this->id ),
-				"description" => sprintf( format: __( text: "Acessar configurações globais %s.", domain: $this->id ), values: $this->get_global_config() ),
+				"description" => sprintf( __( text: "Acessar configurações globais %s.", domain: $this->id ), $this->get_global_config() ),
 			],
 		];
 	}
@@ -657,7 +657,7 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	 *
 	 * @return void
 	 */
-	public function finalize_order( WC_Order $order, array $data ) : void
+	public function finalize_order( \WC_Order $order, array $data ) : void
 	{
 		if ( $order )
 		{
@@ -776,7 +776,7 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	 *
 	 * @return void
 	 */
-	public function scheduled_subscription_payment( float $renewal_total, WC_Order $renewal_order ) : void
+	public function scheduled_subscription_payment( float $renewal_total, \WC_Order $renewal_order ) : void
 	{
 		$response = $this->api->do_subscription_renewal_payment( order: $renewal_order, amount: $renewal_total );
 
@@ -805,7 +805,7 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	 *
 	 * @return void
 	 */
-	public function update_failing_payment_method( WC_Subscription $subscription, WC_Order $renewal_order ) : void
+	public function update_failing_payment_method( \WC_Subscription $subscription, \WC_Order $renewal_order ) : void
 	{
 		$id  = $renewal_order->get_meta( key: "_triibo_assinatura_payment_id",    single: true );
 		$tk  = $renewal_order->get_meta( key: "_triibo_assinatura_payment_token", single: true );
@@ -830,7 +830,7 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	 *
 	 * @return bool 	Flag indicating whether the subscription payment method can be updated.
 	 */
-	function can_subscription_be_updated_to_new_payment_method( bool $subscription_can_be_changed, WC_Subscription $subscription ) : bool
+	function can_subscription_be_updated_to_new_payment_method( bool $subscription_can_be_changed, \WC_Subscription $subscription ) : bool
 	{
 		if ( $this->id == $subscription->get_payment_method() )
 			if ( $subscription->has_status( status: [ "active", "on-hold" ] ) )
@@ -851,7 +851,7 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 	 *
 	 * @return bool 	Flag indicating whether the other subscriptions can be updated.
 	 */
-	function can_update_all_subscriptions( bool $can_update, string $gateway_id, WC_Subscription $subscription ) : bool
+	function can_update_all_subscriptions( bool $can_update, string $gateway_id, \WC_Subscription $subscription ) : bool
 	{
 		if ( $this->id == $gateway_id )
 			return false;

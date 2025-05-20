@@ -9,7 +9,7 @@
  */
 defined( constant_name: "ABSPATH" ) || exit;
 
-class Triibo_Assinaturas_Api extends WP_REST_Controller
+class Triibo_Assinaturas_Api extends \WP_REST_Controller
 {
 	/**
 	 * Endpoint namespace.
@@ -18,7 +18,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 	 *
 	 * @var string
 	 */
-	protected string $namespace = WC_Triibo_Assinaturas::DOMAIN . "/v1";
+	protected $namespace = WC_Triibo_Assinaturas::DOMAIN . "/v1";
 
 	/**
 	 * Stores the request.
@@ -449,7 +449,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 	 *
 	 * @return 	array
 	 */
-	public function do_subscription_request( WC_Order $order, array $posted ) : array
+	public function do_subscription_request( \WC_Order $order, array $posted ) : array
 	{
 		$is_payment_change             = WC_Subscriptions_Change_Payment_Gateway::$is_request_to_change_payment;
 		$order_contains_failed_renewal = false;
@@ -654,7 +654,7 @@ class Triibo_Assinaturas_Api extends WP_REST_Controller
 	 *
 	 * @return array
 	 */
-	public function do_subscription_renewal_payment( WC_Order $order, float $amount ) : array
+	public function do_subscription_renewal_payment( \WC_Order $order, float $amount ) : array
 	{
 		$user_id      = $order->get_user_id();
 		$token        = $this->validate_token( user_id: $user_id );

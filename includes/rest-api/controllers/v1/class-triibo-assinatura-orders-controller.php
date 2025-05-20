@@ -9,7 +9,7 @@
  */
 defined( constant_name: "ABSPATH" ) || exit;
 
-class Triibo_Assinaturas_Orders_Controller extends WP_REST_Controller
+class Triibo_Assinaturas_Orders_Controller extends \WP_REST_Controller
 {
 	/**
 	 * Endpoint namespace.
@@ -18,7 +18,7 @@ class Triibo_Assinaturas_Orders_Controller extends WP_REST_Controller
 	 *
 	 * @var string
 	 */
-	protected string $namespace = "triibo-assinatura/v1";
+	protected $namespace = "triibo-assinatura/v1";
 
 	/**
 	 * Route base.
@@ -27,7 +27,7 @@ class Triibo_Assinaturas_Orders_Controller extends WP_REST_Controller
 	 *
 	 * @var string
 	 */
-	protected string $rest_base = "orders";
+	protected $rest_base = "orders";
 
 	/**
 	 * Stores the request.
