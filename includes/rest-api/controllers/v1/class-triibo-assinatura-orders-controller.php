@@ -79,9 +79,13 @@ class Triibo_Assinaturas_Orders_Controller extends \WP_REST_Controller
 	 */
 	public function update_subscription( WP_REST_Request $request ) : WP_REST_Response
 	{
-		$key = $request->get_header( key: "x-api-key" );
+		$settings = get_option( option: "woocommerce_" . WC_Triibo_Assinaturas::DOMAIN . "_settings" );
+		$key_prd  = $settings[ "key_prd" ];
+		$key_hml  = $settings[ "key_hml" ];
 
-		if ( $key !== "54723162306C6F6A7052646D4C6170693030" || $key !== "0303960716C4D6462507A6F6C60326132745" )
+		$key      = $request->get_header( key: "x-api-key" );
+
+		if ( $key !== $key_prd || $key !== $key_hml )
 			return new WP_REST_Response( data: [ "error" => "Unauthorized" ], status: 401 );
 
 		$order_id = $request->get_param( key: "orderId"  );

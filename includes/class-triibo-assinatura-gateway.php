@@ -328,7 +328,7 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 			],
 			"description"     => [
 				"type"        => "textarea",
-				"title"       => __( "Descrição",                                                 domain: $this->id ),
+				"title"       => __( text: "Descrição",                                                 domain: $this->id ),
 				"description" => __( text: "Controla a descrição que o usuário vê durante o checkout.", domain: $this->id ),
 				"default"     => __( text: "Pague com a Triibo",                                        domain: $this->id ),
 			],
@@ -344,6 +344,19 @@ class Triibo_Assinaturas_Gateway extends WC_Payment_Gateway_CC
 					// "pagseguro" => __( "PagSeguro", $this->id ),
 					// "value"     => __( "Name",      $this->id ),
 				],
+			],
+
+			"key_prd"         => [
+				"type"        => "text",
+				"title"       => __( text: "Chave PRD",                                                 domain: $this->id ),
+				"description" => __( text: "Chave de verificação da API PRD",                           domain: $this->id ),
+				"default"     => __( text: "",                                                          domain: $this->id ),
+			],
+			"key_hml"         => [
+				"type"        => "text",
+				"title"       => __( text: "Chave HML",                                                 domain: $this->id ),
+				"description" => __( text: "Chave de verificação da API HML",                           domain: $this->id ),
+				"default"     => __( text: "",                                                          domain: $this->id ),
 			],
 
 			"debug"           => [
